@@ -14,6 +14,7 @@ Route::get('/dashboard', function () { return view('dashboard'); })->name('dashb
 // Inventory
 Route::prefix('products')->name('products.')->group(function () {
     Route::get('/', fn() => view('products.index'))->name('index');
+    Route::get('/create', fn() => view('products.create'))->name('create');
 });
 
 Route::prefix('stock')->name('stock.')->group(function () {
@@ -22,6 +23,7 @@ Route::prefix('stock')->name('stock.')->group(function () {
 
 Route::prefix('movements')->name('movements.')->group(function () {
     Route::get('/', fn() => view('movements.index'))->name('index');
+    Route::get('/create', fn() => view('movements.create'))->name('create');
 });
 
 // Sales

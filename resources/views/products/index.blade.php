@@ -9,7 +9,7 @@
     </div>
     <div class="flex items-center gap-3">
       <input type="text" placeholder="Rechercher…" class="hidden md:block rounded-lg border-gray-300 focus:ring-primary-600 focus:border-primary-600" />
-      <a href="#" class="bg-primary-600 hover:bg-primary-700 text-white rounded-lg px-4 py-2">Nouveau produit</a>
+      <a href="{{ route('products.create') }}" class="bg-primary-600 hover:bg-primary-700 text-white rounded-lg px-4 py-2">Nouveau produit</a>
     </div>
   </div>
 

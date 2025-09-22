@@ -12,10 +12,7 @@ Route::get('/login', function () { return view('auth.login'); })->name('login');
 Route::get('/dashboard', function () { return view('dashboard'); })->name('dashboard');
 
 // Inventory
-Route::prefix('products')->name('products.')->group(function () {
-    Route::get('/', fn() => view('products.index'))->name('index');
-    Route::get('/create', fn() => view('products.create'))->name('create');
-});
+Route::resource('products', App\Http\Controllers\ProductController::class);
 
 Route::prefix('stock')->name('stock.')->group(function () {
     Route::get('/', fn() => view('stock.index'))->name('index');

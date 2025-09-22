@@ -14,27 +14,39 @@ class Product extends Model
         'nom',
         'prix_achat',
         'categorie',
-        'quantite',
         'seuil_stock'
     ];
 
     protected $casts = [
         'prix_achat' => 'decimal:2',
-        'quantite' => 'integer',
         'seuil_stock' => 'integer'
     ];
 
     // Scopes
     public function scopeEnStock($query)
     {
-        return $query->where('quantite', '>', 0);
+        return $query->whereHas('stock', function($q) {
+            $q->where('quantite', '>', 0);
+        });
     }
 
-    public function scopeRuptureStock($query)
+    public function scopeEnRupture($query)
     {
-        return $query->whereRaw('quantite <= seuil_stock');
+        return $query->whereHas('stock', function($q) {
+            $q->whereColumn('quantite', '<=', 'seuil');
+        });
     }
-
+    
+    public function stock()
+    {
+        return $this->hasOne(Stock::class);
+    }
+    
+    public function movements()
+    {
+        return $this->hasMany(Movement::class);
+    }
+    
     // Accessors
     public function getPrixAchatFormatteAttribute()
     {

@@ -51,7 +51,7 @@
         </div>
       </div>
       
-      <div>
+      <!-- <div>
         <label class="block text-sm font-medium text-gray-700 mb-2">Quantité en stock</label>
         <div class="w-full rounded-lg border border-gray-200 bg-gray-50 px-3 py-3 text-gray-900">
           {{ $product->quantite }} pcs
@@ -59,7 +59,7 @@
             <span class="ml-2 px-2 py-1 text-xs rounded-full bg-red-100 text-red-700">Stock faible</span>
           @endif
         </div>
-      </div>
+      </div> -->
       
       <div>
         <label class="block text-sm font-medium text-gray-700 mb-2">Seuil de stock</label>

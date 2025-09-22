@@ -13,15 +13,23 @@ Route::get('/login', function () { return view('auth.login'); })->name('login');
 Route::get('/dashboard', function () { return view('dashboard'); })->name('dashboard');
 
 // Inventory
-Route::resource('products', App\Http\Controllers\ProductController::class);
+Route::get('/products', [App\Http\Controllers\ProductController::class, 'index'])->name('products.index');
+Route::get('/products/create', [App\Http\Controllers\ProductController::class, 'create'])->name('products.create');
+Route::post('/products', [App\Http\Controllers\ProductController::class, 'store'])->name('products.store');
+Route::get('/products/{product}', [App\Http\Controllers\ProductController::class, 'show'])->name('products.show');
+Route::get('/products/{product}/edit', [App\Http\Controllers\ProductController::class, 'edit'])->name('products.edit');
+Route::put('/products/{product}', [App\Http\Controllers\ProductController::class, 'update'])->name('products.update');
+Route::delete('/products/{product}', [App\Http\Controllers\ProductController::class, 'destroy'])->name('products.destroy');
 
 Route::prefix('stock')->name('stock.')->group(function () {
-    Route::get('/', fn() => view('stock.index'))->name('index');
+    Route::get('/', [App\Http\Controllers\StockController::class, 'index'])->name('index');
+    Route::get('/{product}', [App\Http\Controllers\StockController::class, 'show'])->name('stock.show');
 });
 
 Route::prefix('movements')->name('movements.')->group(function () {
-    Route::get('/', fn() => view('movements.index'))->name('index');
-    Route::get('/create', fn() => view('movements.create'))->name('create');
+    Route::get('/', [App\Http\Controllers\MovementController::class, 'index'])->name('index');
+    Route::get('/create', [App\Http\Controllers\MovementController::class, 'create'])->name('create');
+    Route::post('/', [App\Http\Controllers\MovementController::class, 'store'])->name('store');
 });
 
 // Sales

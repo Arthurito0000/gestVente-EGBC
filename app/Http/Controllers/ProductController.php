@@ -3,6 +3,9 @@
 namespace App\Http\Controllers;
 
 use App\Models\Product;
+use App\Models\Category;
+use App\Models\Stock;
+use App\Models\Movement;
 use Illuminate\Http\Request;
 
 class ProductController extends Controller
@@ -12,7 +15,7 @@ class ProductController extends Controller
      */
     public function index()
     {
-        $products = Product::orderBy('created_at', 'desc')->get();
+        $products = Product::latest()->paginate(10);
         return view('products.index', compact('products'));
     }
 
@@ -21,7 +24,8 @@ class ProductController extends Controller
      */
     public function create()
     {
-        return view('products.create');
+        $categories = Category::orderBy('name')->get();
+        return view('products.create', compact('categories'));
     }
 
     /**
@@ -33,12 +37,29 @@ class ProductController extends Controller
             'sku' => 'required|string|unique:products,sku|max:255',
             'nom' => 'required|string|max:255',
             'prix_achat' => 'required|numeric|min:0',
-            'categorie' => 'nullable|string|in:electronique,alimentaire,vetements,autre',
+            'categorie' => 'nullable|string|exists:categories,name',
             'quantite' => 'required|integer|min:0',
             'seuil_stock' => 'required|integer|min:0'
         ]);
 
-        Product::create($request->all());
+        // Créer le produit
+        $product = Product::create($request->except('quantite'));
+
+        // Créer le stock avec la quantité initiale
+        Stock::create([
+            'product_id' => $product->id,
+            'quantite' => $request->quantite,
+            'seuil' => $request->seuil_stock
+        ]);
+
+        // Créer le mouvement de stock initial
+        Movement::create([
+            'product_id' => $product->id,
+            'type' => 'ENTREE',
+            'quantite' => $request->quantite,
+            'motif' => 'Stock initial',
+            'date' => now()
+        ]);
 
         return redirect()->route('products.index')
             ->with('success', 'Produit créé avec succès.');
@@ -57,7 +78,8 @@ class ProductController extends Controller
      */
     public function edit(Product $product)
     {
-        return view('products.edit', compact('product'));
+        $categories = Category::orderBy('name')->get();
+        return view('products.edit', compact('product', 'categories'));
     }
 
     /**
@@ -69,7 +91,7 @@ class ProductController extends Controller
             'sku' => 'required|string|unique:products,sku,' . $product->id . '|max:255',
             'nom' => 'required|string|max:255',
             'prix_achat' => 'required|numeric|min:0',
-            'categorie' => 'nullable|string|in:electronique,alimentaire,vetements,autre',
+            'categorie' => 'nullable|string|exists:categories,name',
             'quantite' => 'required|integer|min:0',
             'seuil_stock' => 'required|integer|min:0'
         ]);

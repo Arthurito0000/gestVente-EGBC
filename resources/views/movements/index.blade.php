@@ -32,24 +32,35 @@
           </tr>
         </thead>
         <tbody class="divide-y divide-gray-200 bg-white">
-          @foreach([
-            ['date'=>'2025-09-20 10:24','produit'=>'SKU-001 • Souris','motif'=>'Réception fournisseur','type'=>'ENTREE','qte'=>120],
-            ['date'=>'2025-09-20 09:13','produit'=>'SKU-114 • Clavier','motif'=>'Vente #INV-1023','type'=>'SORTIE','qte'=>-15],
-            ['date'=>'2025-09-19 18:02','produit'=>'SKU-221 • Écran 24"','motif'=>'Réapprovisionnement','type'=>'ENTREE','qte'=>30],
-          ] as $row)
+          @forelse($movements as $movement)
           <tr class="hover:bg-gray-50">
-            <td class="px-4 py-2 text-sm text-gray-700">{{ $row['date'] }}</td>
-            <td class="px-4 py-2 text-sm text-gray-900">{{ $row['produit'] }}</td>
-            <td class="px-4 py-2 text-sm text-gray-600">{{ $row['motif'] }}</td>
+            <td class="px-4 py-2 text-sm text-gray-700">{{ $movement->date->format('d/m/Y H:i') }}</td>
+            <td class="px-4 py-2 text-sm text-gray-900">{{ $movement->product->sku }} • {{ $movement->product->nom }}</td>
+            <td class="px-4 py-2 text-sm text-gray-600">{{ $movement->motif }}</td>
             <td class="px-4 py-2 text-sm text-center">
-              <span class="px-2 py-0.5 rounded text-xs font-medium {{ $row['type']==='ENTREE' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700' }}">{{ $row['type'] }}</span>
+              <span class="px-2 py-0.5 rounded text-xs font-medium {{ $movement->type === 'ENTREE' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700' }}">{{ $movement->type }}</span>
             </td>
-            <td class="px-4 py-2 text-sm text-right font-medium {{ $row['qte']>0 ? 'text-green-700' : 'text-red-700' }}">{{ $row['qte']>0?'+':'' }}{{ $row['qte'] }}</td>
+            <td class="px-4 py-2 text-sm text-right font-medium {{ $movement->type === 'ENTREE' ? 'text-green-700' : 'text-red-700' }}">
+              {{ $movement->type === 'ENTREE' ? '+' : '-' }}{{ $movement->quantite }}
+            </td>
           </tr>
-          @endforeach
+          @empty
+          <tr>
+            <td colspan="5" class="px-4 py-8 text-center text-gray-500">
+              Aucun mouvement trouvé. <a href="{{ route('products.create') }}" class="text-primary-700 hover:text-primary-600">Créer le premier produit</a>
+            </td>
+          </tr>
+          @endforelse
         </tbody>
       </table>
     </div>
+    
+    <!-- Pagination -->
+    @if($movements->hasPages())
+      <div class="px-6 py-4 border-t border-gray-200">
+        {{ $movements->links() }}
+      </div>
+    @endif
   </div>
 </div>
 

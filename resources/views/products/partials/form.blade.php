@@ -28,10 +28,11 @@
         <div class="relative">
           <select name="categorie" class="w-full rounded-lg border border-gray-300 bg-gray-50 hover:bg-white focus:bg-white focus:outline-none focus:ring-0 focus:border-blue-500 transition-colors pl-3 pr-3 py-3 appearance-none">
             <option value="">Sélectionner...</option>
-            <option value="electronique" {{ old('categorie', $product->categorie ?? '') == 'electronique' ? 'selected' : '' }}>Électronique</option>
-            <option value="alimentaire" {{ old('categorie', $product->categorie ?? '') == 'alimentaire' ? 'selected' : '' }}>Alimentaire</option>
-            <option value="vetements" {{ old('categorie', $product->categorie ?? '') == 'vetements' ? 'selected' : '' }}>Vêtements</option>
-            <option value="autre" {{ old('categorie', $product->categorie ?? '') == 'autre' ? 'selected' : '' }}>Autre</option>
+            @foreach($categories as $category)
+              <option value="{{ $category->name }}" {{ old('categorie', $product->categorie ?? '') == $category->name ? 'selected' : '' }}>
+                {{ $category->name }}
+              </option>
+            @endforeach
           </select>
           <span class="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 pointer-events-none">
             ▼

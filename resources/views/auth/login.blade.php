@@ -33,11 +33,11 @@
     <!-- Left: Brand/Message -->
     <div class="relative bg-gradient-to-br from-primary-800 via-primary-800 to-primary-900 text-white p-8 md:p-16 flex flex-col justify-between md:col-span-3">
       <div>
-        <div class="flex items-center gap-3 mb-8">
+        <div class="flex items-center gap-3 mb-8 ">
           <div class="w-12 h-12 bg-white/10 border border-white/20 rounded-xl flex items-center justify-center">
-            <span class="font-heading text-xl">SM</span>
+            <span class="font-heading text-xl"> <img src="{{ asset('images/logo.png') }}" alt="logo" class="h-[30px] items-center"/></span>
           </div>
-          <div class="font-heading text-lg">Stock Manager</div>
+          <div class="font-heading text-lg">Sales Manager EGBC</div>
         </div>
 
         <h2 class="font-heading text-3xl md:text-4xl leading-tight">Gérez vos stocks avec clarté et précision</h2>
@@ -75,6 +75,9 @@
     <div class="p-8 md:p-14 flex items-center justify-center bg-white h-screen md:col-span-2">
       <div class="w-full max-w-md">
         <div class="mb-8">
+          <div class="flex justify-center items-center">
+            <img src="{{ asset('images/logo.png') }}" alt="logo" class="h-[120px] items-center"/>
+          </div>
           <h1 class="font-heading text-2xl text-gray-900">Se connecter</h1>
           <p class="text-gray-500">Accédez à votre tableau de bord</p>
         </div>

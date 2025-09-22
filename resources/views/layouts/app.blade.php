@@ -52,7 +52,7 @@
       <div class="h-16 px-4 flex items-center justify-between border-b border-white/10">
         <div class="flex items-center space-x-3">
           <div class="w-9 h-9 bg-white rounded-xl flex items-center justify-center shadow">
-            <svg class="w-5 h-5 text-primary-700" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2l9 4v6c0 5-3.5 9-9 10C6.5 21 3 17 3 12V6l9-4z"/></svg>
+            <img src="{{ asset('images/logo.png') }}" alt="logo" class="h-[40px] items-center"/>
           </div>
           <span id="brand-text" class="font-heading font-semibold tracking-wide">Stock Manager</span>
         </div>

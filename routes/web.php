@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\CategoryController;
 use Illuminate\Support\Facades\Route;
 
 // Redirect root to login for now (frontend only)
@@ -39,4 +40,10 @@ Route::prefix('roles')->name('roles.')->group(function () {
 
 Route::prefix('permissions')->name('permissions.')->group(function () {
     Route::get('/', fn() => view('permissions.index'))->name('index');
+});
+
+//Categories
+Route::prefix('categories')->name('categories.')->group(function () {
+    Route::get('/', [CategoryController::class, 'index'])->name('index');
+    Route::post('/', [CategoryController::class, 'store'])->name('store');
 });

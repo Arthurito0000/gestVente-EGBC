@@ -8,7 +8,7 @@
   </div>
 
   <div class="bg-white rounded-2xl shadow-md border border-gray-200 p-6 md:p-8">
-    <form action="#" method="POST" class="space-y-6">
+    <form action="{{ route('products.store') }}" method="POST" class="space-y-6">
       @csrf
       @include('products.partials.form')
     </form>

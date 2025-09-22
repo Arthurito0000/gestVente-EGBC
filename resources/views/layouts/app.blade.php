@@ -31,9 +31,16 @@
     </script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link
-        href="https://fonts.googleapis.com/css2?family=Inter:wght@500;600;700&family=Nunito:wght@400;500;600&display=swap"
-        rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@500;600;700&family=Nunito:wght@400;500;600&display=swap" rel="stylesheet">
+    
+    <!-- Toastr CSS -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css">
+    
+    <!-- jQuery (requis pour Toastr) -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+    
+    <!-- Toastr JS -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
     <style>
         :root {
             --sidebar-expanded: 16rem;
@@ -243,8 +250,44 @@
             }
         }
 
-        collapseBtnBottom?.addEventListener('click', toggleSidebar);
-    </script>
+    collapseBtnBottom?.addEventListener('click', toggleSidebar);
+
+    // Configuration Toastr
+    toastr.options = {
+      "closeButton": true,
+      "debug": false,
+      "newestOnTop": true,
+      "progressBar": true,
+      "positionClass": "toast-top-right",
+      "preventDuplicates": false,
+      "onclick": null,
+      "showDuration": "300",
+      "hideDuration": "1000",
+      "timeOut": "5000",
+      "extendedTimeOut": "1000",
+      "showEasing": "swing",
+      "hideEasing": "linear",
+      "showMethod": "fadeIn",
+      "hideMethod": "fadeOut"
+    };
+
+    // Affichage des messages de session
+    @if(session('success'))
+      toastr.success('{{ session('success') }}');
+    @endif
+
+    @if(session('error'))
+      toastr.error('{{ session('error') }}');
+    @endif
+
+    @if(session('warning'))
+      toastr.warning('{{ session('warning') }}');
+    @endif
+
+    @if(session('info'))
+      toastr.info('{{ session('info') }}');
+    @endif
+  </script>
 </body>
 
 </html>

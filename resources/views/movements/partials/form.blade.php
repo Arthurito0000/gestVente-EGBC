@@ -1,37 +1,37 @@
 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div>
           <label class="block text-sm font-medium text-gray-700 mb-2">Produit</label>
-          <select class="w-full rounded-lg border border-gray-300 bg-gray-50 hover:bg-white focus:bg-white focus:ring-2 focus:ring-primary-600 focus:border-primary-600 transition-colors px-3 py-3">
-            <option>SKU-001 — Souris Optique</option>
-            <option>SKU-114 — Clavier Mécanique</option>
-            <option>SKU-221 — Écran 24"</option>
+          <select name="product_id" class="w-full rounded-lg border border-gray-300 bg-gray-50 hover:bg-white focus:bg-white focus:outline-none focus:ring-0 focus:border-blue-500 transition-colors px-3 py-3">
+            @foreach ($products as $product)
+              <option value="{{ $product->id }}">{{ $product->sku }} — {{ $product->nom }}</option>
+            @endforeach
           </select>
         </div>
         <div>
           <label class="block text-sm font-medium text-gray-700 mb-2">Type</label>
           <div class="flex gap-3">
             <label class="inline-flex items-center gap-2 px-3 py-2 rounded-lg border cursor-pointer">
-              <input type="radio" name="type" value="ENTREE" class="text-green-600 focus:ring-green-600" checked>
+              <input name="type" type="radio" selected name="type" value="ENTREE" class="text-green-600 focus:ring-green-600" checked>
               <span>ENTREE</span>
             </label>
-            <label class="inline-flex items-center gap-2 px-3 py-2 rounded-lg border cursor-pointer">
+            <!-- <label class="inline-flex items-center gap-2 px-3 py-2 rounded-lg border cursor-pointer">
               <input type="radio" name="type" value="SORTIE" class="text-red-600 focus:ring-red-600">
               <span>SORTIE</span>
-            </label>
+            </label> -->
           </div>
         </div>
         <div>
           <label class="block text-sm font-medium text-gray-700 mb-2">Quantité</label>
-          <input type="number" class="w-full rounded-lg border border-gray-300 bg-gray-50 hover:bg-white focus:bg-white focus:ring-2 focus:ring-primary-600 focus:border-primary-600 transition-colors px-3 py-3" placeholder="0"/>
+          <input name="quantite" type="number" class="w-full rounded-lg border border-gray-300 bg-gray-50 hover:bg-white focus:bg-white focus:outline-none focus:ring-0 focus:border-blue-500 transition-colors px-3 py-3" placeholder="0"/>
         </div>
         <div>
           <label class="block text-sm font-medium text-gray-700 mb-2">Date</label>
-          <input type="datetime-local" class="w-full rounded-lg border border-gray-300 bg-gray-50 hover:bg-white focus:bg-white focus:ring-2 focus:ring-primary-600 focus:border-primary-600 transition-colors px-3 py-3"/>
+          <input name="date" value="{{ Carbon\Carbon::now()->format('Y-m-d\TH:i') }}" type="datetime-local" class="w-full rounded-lg border border-gray-300 bg-gray-50 hover:bg-white focus:bg-white focus:outline-none focus:ring-0 focus:border-blue-500 transition-colors px-3 py-3"/>
         </div>
       </div>
       <div>
         <label class="block text-sm font-medium text-gray-700 mb-2">Motif</label>
-        <textarea rows="3" class="w-full rounded-lg border border-gray-300 bg-gray-50 hover:bg-white focus:bg-white focus:ring-2 focus:ring-primary-600 focus:border-primary-600 transition-colors px-3 py-3" placeholder="Ex: Réception fournisseur, vente, ajustement..."></textarea>
+        <textarea name="motif" rows="3" class="w-full rounded-lg border border-gray-300 bg-gray-50 hover:bg-white focus:bg-white focus:outline-none focus:ring-0 focus:border-blue-500 transition-colors px-3 py-3" placeholder="Ex: Réception fournisseur, vente, ajustement..."></textarea>
       </div>
 
       <div class="flex items-center justify-end gap-3">

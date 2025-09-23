@@ -15,6 +15,28 @@ Route::get('/dashboard', function () { return view('dashboard'); })->name('dashb
 // Inventory
 Route::get('/products', [App\Http\Controllers\ProductController::class, 'index'])->name('products.index');
 Route::get('/products/create', [App\Http\Controllers\ProductController::class, 'create'])->name('products.create');
+
+// Export routes (avant les routes avec paramètres) - Structure organisée
+Route::prefix('export')->name('export.')->group(function () {
+    // Exports produits
+    Route::get('/products/excel', [App\Http\Controllers\Export\ExportController::class, 'productsExcel'])->name('products.excel');
+    Route::get('/products/pdf', [App\Http\Controllers\Export\ExportController::class, 'productsPdf'])->name('products.pdf');
+    Route::get('/products/preview', [App\Http\Controllers\Export\ExportController::class, 'productsPreview'])->name('products.preview');
+    Route::get('/products/stats', [App\Http\Controllers\Export\ExportController::class, 'productsStats'])->name('products.stats');
+    
+    // Exports stocks (à implémenter)
+    Route::get('/stocks/excel', [App\Http\Controllers\Export\ExportController::class, 'stocksExcel'])->name('stocks.excel');
+    Route::get('/stocks/pdf', [App\Http\Controllers\Export\ExportController::class, 'stocksPdf'])->name('stocks.pdf');
+    
+    // Exports mouvements (à implémenter)
+    Route::get('/movements/excel', [App\Http\Controllers\Export\ExportController::class, 'movementsExcel'])->name('movements.excel');
+    Route::get('/movements/pdf', [App\Http\Controllers\Export\ExportController::class, 'movementsPdf'])->name('movements.pdf');
+});
+
+// Routes de compatibilité (anciennes URLs)
+Route::get('/products/export/excel', [App\Http\Controllers\Export\ExportController::class, 'productsExcel'])->name('products.export.excel');
+Route::get('/products/export/pdf', [App\Http\Controllers\Export\ExportController::class, 'productsPdf'])->name('products.export.pdf');
+
 Route::post('/products', [App\Http\Controllers\ProductController::class, 'store'])->name('products.store');
 Route::get('/products/{product}', [App\Http\Controllers\ProductController::class, 'show'])->name('products.show');
 Route::get('/products/{product}/edit', [App\Http\Controllers\ProductController::class, 'edit'])->name('products.edit');

@@ -1,4 +1,5 @@
 @extends('layouts.app')
+@section('title', 'Gestions des categories')
 
 @section('content')
     <div class="space-y-6">

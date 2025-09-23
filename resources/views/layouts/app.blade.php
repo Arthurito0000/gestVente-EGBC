@@ -216,7 +216,7 @@
                                 d="M4 6h16M4 12h16M4 18h16" />
                         </svg>
                     </button>
-                    <h1 class="font-heading text-lg text-gray-900">{{ $page ?? 'Dashboard' }}</h1>
+                    <h1 class="font-heading text-lg text-gray-900">{{ $page ?? 'Dashboards' }}</h1>
                 </div>
                 <div class="flex items-center gap-3">
                     <div class="hidden md:flex items-center gap-2 px-3 py-1.5 rounded-full border">

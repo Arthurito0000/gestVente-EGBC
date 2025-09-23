@@ -9,10 +9,15 @@ use Illuminate\Http\Request;
 class CategoryController extends Controller
 {
     public function index()
-    {
-        $categories = Category::oldest('id')->paginate(10);
-        return view('categories.index', compact('categories'));
-    }
+{
+    $categories = Category::oldest('id')->paginate(10);
+
+    return view('categories.index', [
+        'categories' => $categories,
+        'page' => 'Gestions des catégories',
+    ]);
+}
+
 
     public function store(StoreCtegoryRequest $request)
     {

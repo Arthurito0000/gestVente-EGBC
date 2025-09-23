@@ -13,10 +13,34 @@ class ProductController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Request $request)
     {
-        $products = Product::latest()->paginate(10);
-        return view('products.index', compact('products'));
+        $query = Product::query();
+
+        // Recherche
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where(function($q) use ($search) {
+                $q->where('sku', 'LIKE', "%{$search}%")
+                  ->orWhere('nom', 'LIKE', "%{$search}%")
+                  ->orWhere('categorie', 'LIKE', "%{$search}%");
+            });
+        }
+
+        $products = $query->latest()->paginate(10);
+        
+        // Conserver les paramètres de recherche dans la pagination
+        $products->appends($request->query());
+
+        // Si c'est une requête AJAX, retourner seulement le contenu de la table
+        if ($request->ajax()) {
+            return view('products.partials.table', compact('products'))->render();
+        }
+
+        return view('products.index', [
+            'products' => $products,
+            'page' => 'Liste des produits',
+        ]);
     }
 
     /**
@@ -25,7 +49,7 @@ class ProductController extends Controller
     public function create()
     {
         $categories = Category::orderBy('name')->get();
-        return view('products.create', compact('categories'));
+        return view('products.create', ['categories'=>$categories,'page'=>'Ajout d\'un produit']);
     }
 
     /**
@@ -37,7 +61,7 @@ class ProductController extends Controller
             'sku' => 'required|string|unique:products,sku|max:255',
             'nom' => 'required|string|max:255',
             'prix_achat' => 'required|numeric|min:0',
-            'categorie' => 'nullable|string|exists:categories,name',
+            'categorie' => 'required|string|exists:categories,name',
             'quantite' => 'required|integer|min:0',
             'seuil_stock' => 'required|integer|min:0'
         ]);
@@ -70,7 +94,7 @@ class ProductController extends Controller
      */
     public function show(Product $product)
     {
-        return view('products.show', compact('product'));
+        return view('products.show',['product'=>$product,'page'=>'Détails du produit']);
     }
 
     /**
@@ -79,7 +103,7 @@ class ProductController extends Controller
     public function edit(Product $product)
     {
         $categories = Category::orderBy('name')->get();
-        return view('products.edit', compact('product', 'categories'));
+        return view('products.edit', ['product'=>$product,'categories'=>$categories,'page'=>'Modification du produit']);
     }
 
     /**
@@ -92,7 +116,7 @@ class ProductController extends Controller
             'nom' => 'required|string|max:255',
             'prix_achat' => 'required|numeric|min:0',
             'categorie' => 'nullable|string|exists:categories,name',
-            'quantite' => 'required|integer|min:0',
+            // 'quantite' => 'required|integer|min:0',
             'seuil_stock' => 'required|integer|min:0'
         ]);
 
@@ -112,4 +136,5 @@ class ProductController extends Controller
         return redirect()->route('products.index')
             ->with('success', 'Produit supprimé avec succès.');
     }
+
 }

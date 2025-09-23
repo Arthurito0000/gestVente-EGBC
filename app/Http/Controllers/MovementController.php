@@ -14,14 +14,14 @@ class MovementController extends Controller
         $movements = Movement::with('product')
         ->orderBy('id', 'desc')
         ->paginate(10);
-    
-        return view('movements.index', compact('movements'));
+
+        return view('movements.index', ['movements'=>$movements,'page'=>'Liste des mouvements']);
     }
 
     public function create()
     {
         $products = Product::all();
-        return view('movements.create', compact('products'));
+        return view('movements.create', ['products'=>$products,'page'=>'Ajout d\'un mouvement']);
         
     }
 

@@ -23,6 +23,16 @@
             <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
           @enderror
         </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-2">Prix de vente</label>
+          <div class="relative">
+            <input type="number" name="prix_vente" value="{{ old('prix_vente', $product->prix_vente ?? '') }}" step="0.01" class="w-full rounded-lg border border-gray-300 bg-gray-50 hover:bg-white focus:bg-white focus:outline-none focus:ring-0 focus:border-blue-500 transition-colors pl-10 pr-3 py-3" placeholder="0.00" required/>
+            <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-400">Fcfa</span>
+          </div>
+          @error('prix_vente')
+            <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+          @enderror
+        </div>
        <div>
         <label class="block text-sm font-medium text-gray-700 mb-2">Catégorie <span class="text-gray-400">(optionnel)</span></label>
         <div class="relative">

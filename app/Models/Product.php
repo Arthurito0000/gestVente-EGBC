@@ -14,7 +14,8 @@ class Product extends Model
         'nom',
         'prix_achat',
         'categorie',
-        'seuil_stock'
+        'seuil_stock',
+        'prix_vente'
     ];
 
     protected $casts = [
@@ -50,6 +51,13 @@ class Product extends Model
     // Accessors
     public function getPrixAchatFormatteAttribute()
     {
-        return number_format($this->prix_achat, 2, ',', ' ') . ' €';
+        return number_format((float) $this->prix_achat, 2, ',', ' ') . ' €';
+    }
+
+    public function invoices()
+    {
+        return $this->belongsToMany(Invoice::class, 'invoice_product')
+                    ->withPivot('quantity', 'unit_price', 'total_price')
+                    ->withTimestamps();
     }
 }

@@ -1,7 +1,9 @@
 <?php
 
 use App\Http\Controllers\CategoryController;
+// use App\Http\Controllers\InvoiceController; // duplicate removed
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\InvoiceController;
 
 // Redirect root to login for now (frontend only)
 Route::get('/', function () { return redirect()->route('login'); });
@@ -33,9 +35,6 @@ Route::prefix('movements')->name('movements.')->group(function () {
 });
 
 // Sales
-Route::prefix('invoices')->name('invoices.')->group(function () {
-    Route::get('/', fn() => view('invoices.index'))->name('index');
-});
 
 // Administration
 Route::prefix('users')->name('users.')->group(function () {
@@ -55,3 +54,7 @@ Route::prefix('categories')->name('categories.')->group(function () {
     Route::get('/', [CategoryController::class, 'index'])->name('index');
     Route::post('/', [CategoryController::class, 'store'])->name('store');
 });
+
+// Invoices
+Route::resource('invoices', InvoiceController::class);
+Route::get('invoices/{invoice}/download', [InvoiceController::class, 'download'])->name('invoices.download');

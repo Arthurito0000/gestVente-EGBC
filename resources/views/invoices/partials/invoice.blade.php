@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="fr">
+
 <head>
     <meta charset="UTF-8">
     <title>Facture {{ $invoice->invoice_number }}</title>
@@ -41,7 +42,8 @@
             border-collapse: collapse;
         }
 
-        th, td {
+        th,
+        td {
             text-align: left;
             padding: 2px 0;
         }
@@ -58,15 +60,29 @@
             border-top: 1px dashed #000;
             padding-top: 4px;
         }
-        
-        .visa { margin-top: 10px; padding-top: 6px; }
-        .visa-table { width: 100%; border-collapse: collapse; }
-        .visa-table td { padding-top: 6px; }
-        .visa-table td.right { text-align: right; }
+
+        .visa {
+            margin-top: 10px;
+            padding-top: 6px;
+        }
+
+        .visa-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .visa-table td {
+            padding-top: 6px;
+        }
+
+        .visa-table td.right {
+            text-align: right;
+        }
     </style>
 </head>
+
 <body>
-    
+
     <div class="center bold">
         ETS GLASS LE BIEN CONSTRUCTION (EGBC)
     </div>
@@ -77,16 +93,16 @@
     </div>
     <div class="center border-bottom">
         FACTURE N° {{ $invoice->invoice_number ?? 'N/A' }}<br>
-        Date: {{ $invoice->invoice_date ? \Illuminate\Support\Carbon::parse($invoice->invoice_date)->format('d/m/Y') : 'N/A' }}
+        Date:
+        {{ $invoice->invoice_date ? \Illuminate\Support\Carbon::parse($invoice->invoice_date)->format('d/m/Y') : 'N/A' }}
     </div>
 
-    <div class="bold">Client:</div>
-    <div>{{ $invoice->client_name ?? 'N/A' }}</div>
-    @if(!empty($invoice->client_location))
-    <div>Adresse: {{ $invoice->client_location }}</div>
+    <div class="bold">Client: {{ $invoice->client_name ?? 'N/A' }}</div>
+    @if (!empty($invoice->client_location))
+        <div>Adresse: {{ $invoice->client_location }}</div>
     @endif
-    @if(!empty($invoice->vendor_name))
-    <div class="bold" style="margin-top:4px;">Vendeur: <span class="normal">{{ $invoice->vendor_name }}</span></div>
+    @if (!empty($invoice->vendor_name))
+        <div class="bold" style="margin-top:4px;">Vendeur: <span class="normal">{{ $invoice->vendor_name }}</span></div>
     @endif
 
     <div class="border-top"></div>
@@ -101,7 +117,7 @@
         </thead>
         <tbody>
             @php $subtotal = 0; @endphp
-            @foreach($invoice->products as $product)
+            @foreach ($invoice->products as $product)
                 @php
                     $lineTotal = (float) ($product->pivot->total_price ?? 0);
                     $subtotal += $lineTotal;
@@ -147,6 +163,5 @@
         </table>
     </div>
 </body>
+
 </html>
-
-

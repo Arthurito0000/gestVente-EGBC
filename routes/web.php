@@ -24,14 +24,19 @@ Route::prefix('export')->name('export.')->group(function () {
     Route::get('/products/preview', [App\Http\Controllers\Export\ExportController::class, 'productsPreview'])->name('products.preview');
     Route::get('/products/stats', [App\Http\Controllers\Export\ExportController::class, 'productsStats'])->name('products.stats');
     
-    // Exports stocks (à implémenter)
+    // Exports stocks
     Route::get('/stocks/excel', [App\Http\Controllers\Export\ExportController::class, 'stocksExcel'])->name('stocks.excel');
     Route::get('/stocks/pdf', [App\Http\Controllers\Export\ExportController::class, 'stocksPdf'])->name('stocks.pdf');
+    Route::get('/stocks/preview', [App\Http\Controllers\Export\ExportController::class, 'stocksPreview'])->name('stocks.preview');
+    Route::get('/stocks/stats', [App\Http\Controllers\Export\ExportController::class, 'stocksStats'])->name('stocks.stats');
+    Route::get('/stocks/inventaire', [App\Http\Controllers\Export\ExportController::class, 'stocksInventaire'])->name('stocks.inventaire');
+    Route::get('/stocks/inventaire/preview', [App\Http\Controllers\Export\ExportController::class, 'stocksInventairePreview'])->name('stocks.inventaire.preview');
     
     // Exports mouvements (à implémenter)
     Route::get('/movements/excel', [App\Http\Controllers\Export\ExportController::class, 'movementsExcel'])->name('movements.excel');
     Route::get('/movements/pdf', [App\Http\Controllers\Export\ExportController::class, 'movementsPdf'])->name('movements.pdf');
 });
+
 
 // Routes de compatibilité (anciennes URLs)
 Route::get('/products/export/excel', [App\Http\Controllers\Export\ExportController::class, 'productsExcel'])->name('products.export.excel');
@@ -46,6 +51,7 @@ Route::delete('/products/{product}', [App\Http\Controllers\ProductController::cl
 Route::prefix('stock')->name('stock.')->group(function () {
     Route::get('/', [App\Http\Controllers\StockController::class, 'index'])->name('index');
     Route::get('/{product}', [App\Http\Controllers\StockController::class, 'show'])->name('stock.show');
+    Route::delete('/{stock}', [App\Http\Controllers\StockController::class, 'destroy'])->name('destroy');
 });
 
 Route::prefix('movements')->name('movements.')->group(function () {

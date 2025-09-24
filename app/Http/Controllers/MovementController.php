@@ -28,22 +28,48 @@ class MovementController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'product_id' => 'required',
-            'type' => 'required',
-            'quantite' => 'required',
-            'motif' => 'required',
-            'date' => 'required',
+            'product_id' => 'required|exists:products,id',
+            'type' => 'required|in:ENTREE,SORTIE',
+            'quantite' => 'required|integer|min:1',
+            'prix_achat' => 'nullable|numeric|min:0',
+            'motif' => 'required|string|max:255',
+            'date' => 'required|date',
         ]);
 
-        $movement = new Movement($request->all());
-        $movement->save();
+        // Créer le mouvement
+        $movement = Movement::create($request->all());
 
+        // Mettre à jour le stock
         $stock = Stock::where('product_id', $request->product_id)->first();
-            $stock->quantite += $request->quantite;
-        $stock->save();
+        if ($stock) {
+            if ($request->type === 'ENTREE') {
+                $stock->quantite += $request->quantite;
+            } else {
+                $stock->quantite -= $request->quantite;
+                // S'assurer que le stock ne devient pas négatif
+                $stock->quantite = max(0, $stock->quantite);
+            }
+            $stock->save();
+        }
+
+        // Si un prix d'achat est fourni, mettre à jour le produit
+        if ($request->filled('prix_achat')) {
+            $product = Product::find($request->product_id);
+            if ($product) {
+                $ancienPrix = $product->prix_achat;
+                $product->prix_achat = $request->prix_achat;
+                $product->save();
+                
+                // Ajouter un message informatif sur la mise à jour du prix
+                $message = 'Mouvement créé avec succès.';
+                if ($ancienPrix != $request->prix_achat) {
+                    $message .= " Prix d'achat mis à jour : {$ancienPrix} Fcfa → {$request->prix_achat} Fcfa";
+                }
+                
+                return redirect()->route('movements.index')->with('success', $message);
+            }
+        }
 
         return redirect()->route('movements.index')->with('success', 'Mouvement créé avec succès.');
-
-        
     }
 }

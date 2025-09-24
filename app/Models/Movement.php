@@ -14,6 +14,7 @@ class Movement extends Model
         'product_id',
         'type',
         'quantite',
+        'prix_achat',
         'motif',
         'date'
     ];

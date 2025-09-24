@@ -22,7 +22,17 @@
         </div>
         <div>
           <label class="block text-sm font-medium text-gray-700 mb-2">Quantité</label>
-          <input name="quantite" type="number" class="w-full rounded-lg border border-gray-300 bg-gray-50 hover:bg-white focus:bg-white focus:outline-none focus:ring-0 focus:border-blue-500 transition-colors px-3 py-3" placeholder="0"/>
+          <input name="quantite" type="number" class="w-full rounded-lg border border-gray-300 bg-gray-50 hover:bg-white focus:bg-white focus:outline-none focus:ring-0 focus:border-blue-500 transition-colors px-3 py-3" placeholder="0" required/>
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-2">Prix d'achat unitaire (optionnel)</label>
+          <div class="relative">
+            <input name="prix_achat" type="number" step="0.01" min="0" class="w-full rounded-lg border border-gray-300 bg-gray-50 hover:bg-white focus:bg-white focus:outline-none focus:ring-0 focus:border-blue-500 transition-colors px-3 py-3 pr-12" placeholder="0.00"/>
+            <div class="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
+              <span class="text-gray-500 text-sm">Fcfa</span>
+            </div>
+          </div>
+          <p class="mt-1 text-xs text-gray-500">Si renseigné, mettra à jour le prix d'achat du produit</p>
         </div>
         <div>
           <label class="block text-sm font-medium text-gray-700 mb-2">Date</label>

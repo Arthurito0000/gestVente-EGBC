@@ -57,7 +57,7 @@
                                 {{-- <td class="px-4 py-2 text-sm text-right text-gray-900">
                                     {{ number_format($f['total'], 2, ',', ' ') }} €</td> --}}
                                 <td class="px-4 py-2 text-sm text-right"><a class="text-primary-700 hover:text-primary-600"
-                                        href="#">Détails</a></td>
+                                        href="{{ route('invoices.show', $f['id']) }}">Détails</a></td>
                             </tr>
                         @endforeach
                     </tbody>

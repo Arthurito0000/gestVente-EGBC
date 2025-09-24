@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\StoreInvoiceRequest;
 use App\Models\Invoice;
+use App\Models\Movement;
 use App\Models\Product;
 use App\Models\Stock;
 use Illuminate\Http\Request;
@@ -66,6 +67,16 @@ class InvoiceController extends Controller
             }
     
             DB::commit();
+
+             foreach ($request->lines as $line) {
+                Movement::create([
+                    'product_id' => $line['product_id'],
+                    'type' => 'SORTIE',
+                    'quantite' => $line['quantity'],
+                    'motif' => 'Vente',
+                    'date' => now()
+                ]);
+            }
             Log::info('Transaction committed successfully');
     
             // Load relations
@@ -82,14 +93,6 @@ class InvoiceController extends Controller
     
             // Configure mPDF
             $mpdf = new Mpdf([
-                'mode' => 'utf-8',
-                'format' => [80, 200], // Width x Height in mm (e.g. 80mm wide)
-                'margin_left' => 5,
-                'margin_right' => 5,
-                'margin_top' => 5,
-                'margin_bottom' => 5,
-                'margin_header' => 0,
-                'margin_footer' => 0,
                 'default_font' => 'dejavusans',
                 'tempDir' => $tempPath,
             ]);
@@ -127,7 +130,8 @@ class InvoiceController extends Controller
      */
     public function show(string $id)
     {
-        //
+        $invoice = Invoice::findOrFail($id);
+        return view('invoices.detail', compact('invoice'));
     }
 
     /**
@@ -151,7 +155,17 @@ class InvoiceController extends Controller
      */
     public function destroy(string $id)
     {
-        //
+        $invoice = Invoice::findOrFail($id);
+        
+        $filename = 'Facture_' . $invoice->invoice_number ?? $invoice->id . '.pdf';
+        $path = storage_path('app/public/invoices/' . $filename);
+        if (file_exists($path)) {
+            unlink($path);
+        }
+
+        $invoice->delete();
+
+        return redirect()->route('invoices.index')->with('success', 'Facture supprimée avec succès');
     }
 
     /**

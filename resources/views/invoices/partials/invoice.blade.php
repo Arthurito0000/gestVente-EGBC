@@ -95,6 +95,7 @@
             <tr>
                 <th>Ref.</th>
                 <th>Désignation</th>
+                <th>prix unitaire</th>
                 <th>Qté</th>
                 <th class="text-right">Total</th>
             </tr>
@@ -109,6 +110,7 @@
                 <tr>
                     <td>{{ $product->sku }}</td>
                     <td>{{ $product->nom }}</td>
+                    <td>{{ $product->prix_vente}}</td>
                     <td>{{ $product->pivot->quantity }}</td>
                     <td class="text-right">{{ number_format($lineTotal, 0, ',', ' ') }}</td>
                 </tr>

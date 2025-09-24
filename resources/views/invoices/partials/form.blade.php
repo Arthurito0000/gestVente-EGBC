@@ -47,8 +47,9 @@
             <div>
                 <label class="block text-sm font-medium text-gray-700 mb-1">Date de facture</label>
                 <input name="invoice_date" type="date"
-                    value="{{ old('invoice_date', isset($invoice->invoice_date) ? \Illuminate\Support\Carbon::parse($invoice->invoice_date)->format('Y-m-d') : '') }}"
+                    value="{{ old('invoice_date', isset($invoice) ? \Illuminate\Support\Carbon::parse($invoice->invoice_date)->format('Y-m-d') : now()->format('Y-m-d')) }}"
                     class="w-full rounded-lg border-gray-300 focus:ring-primary-600 focus:border-primary-600 px-3 py-3" />
+
                 @error('invoice_date')
                     <p class="mt-1 text-xs text-red-600">{{ $message }}</p>
                 @enderror

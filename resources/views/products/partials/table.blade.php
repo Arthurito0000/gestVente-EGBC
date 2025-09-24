@@ -5,6 +5,7 @@
         <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">SKU</th>
         <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Nom</th>
         <th class="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase">Prix Achat</th>
+        <th class="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase">Prix Vente</th>
         <th class="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase">Catégorie</th>
         <th class="px-4 py-2"></th>
       </tr>
@@ -15,6 +16,7 @@
         <td class="px-2 py-1 text-sm font-mono text-gray-700">{{ $product->sku }}</td>
         <td class="px-2 py-1 text-sm text-gray-900">{{ $product->nom }}</td>
         <td class="px-2 py-1 text-sm text-right text-gray-700">{{ number_format($product->prix_achat, 2, ',', ' ') }} Fcfa</td>
+        <td class="px-2 py-1 text-sm text-right text-gray-700">{{ number_format($product->prix_vente, 2, ',', ' ') }} Fcfa</td>
         <td class="px-2 py-1 text-sm text-right text-gray-700">
           @if($product->categorie)
             <span class="px-2 py-1 text-xs rounded-full bg-gray-100 text-gray-700">{{ ucfirst($product->categorie) }}</span>

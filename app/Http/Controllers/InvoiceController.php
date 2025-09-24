@@ -42,10 +42,12 @@ class InvoiceController extends Controller
         DB::beginTransaction();
     
         try {
+
+            $invoice_number =  Invoice::count() + 1;
             // Save invoice
             $invoice = Invoice::create([
                 'code'            => 'INV-' . (Invoice::count() + 1),
-                'invoice_number'  => $request->invoice_number,
+                'invoice_number'  => $invoice_number,
                 'invoice_date'    => $request->invoice_date,
                 'vendor_name'     => $request->vendor_name,
                 'client_name'     => $request->client_name,
@@ -97,7 +99,11 @@ class InvoiceController extends Controller
                 'tempDir' => $tempPath,
             ]);
     
-            $mpdf->WriteHTML($html);
+            $chunks = str_split($html, 100000); // ou 100000, à ajuster si nécessaire
+            foreach ($chunks as $chunk) {
+                $mpdf->WriteHTML($chunk);
+            }
+
     
             // Save to file
             $invoiceStoragePath = storage_path('app/public/invoices');

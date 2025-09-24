@@ -34,7 +34,7 @@
                     <p class="mt-1 text-xs text-red-600">{{ $message }}</p>
                 @enderror
             </div> --}}
-            <div>
+            {{-- <div>
                 <label class="block text-sm font-medium text-gray-700 mb-1">Numéro de facture</label>
                 <input name="invoice_number" type="text"
                     value="{{ old('invoice_number', $invoice->invoice_number ?? '') }}"
@@ -43,7 +43,7 @@
                 @error('invoice_number')
                     <p class="mt-1 text-xs text-red-600">{{ $message }}</p>
                 @enderror
-            </div>
+            </div> --}}
             <div>
                 <label class="block text-sm font-medium text-gray-700 mb-1">Date de facture</label>
                 <input name="invoice_date" type="date"

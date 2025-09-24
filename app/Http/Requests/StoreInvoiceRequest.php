@@ -22,7 +22,7 @@ class StoreInvoiceRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'invoice_number' => 'required|string|max:50|unique:invoices,invoice_number',
+            // 'invoice_number' => 'required|string|max:50|unique:invoices,invoice_number',
             'invoice_date' => 'required|date',
             'client_name' => 'required|string|max:255',
             'client_location' => 'nullable|string|max:255',
@@ -40,8 +40,8 @@ class StoreInvoiceRequest extends FormRequest
      public function messages(): array
     {
         return [
-            'invoice_number.required' => 'Le numéro de facture est obligatoire.',
-            'invoice_number.unique' => 'Ce numéro de facture existe déjà.',
+            // 'invoice_number.required' => 'Le numéro de facture est obligatoire.',
+            // 'invoice_number.unique' => 'Ce numéro de facture existe déjà.',
             'invoice_date.required' => 'La date de la facture est obligatoire.',
             'client_name.required' => 'Le nom du client est obligatoire.',
             'lines.required' => 'Vous devez ajouter au moins une ligne de produit.',

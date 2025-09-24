@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\AuthController;
 use App\Http\Controllers\CategoryController;
 // use App\Http\Controllers\InvoiceController; // duplicate removed
 use Illuminate\Support\Facades\Route;
@@ -58,3 +59,8 @@ Route::prefix('categories')->name('categories.')->group(function () {
 // Invoices
 Route::resource('invoices', InvoiceController::class);
 Route::get('invoices/{invoice}/download', [InvoiceController::class, 'download'])->name('invoices.download');
+
+// Auth routes
+Route::get('/login', [AuthController::class, 'showLoginForm'])->name('login');
+Route::post('/login', [AuthController::class, 'login'])->name('login.post');
+Route::post('/logout', [AuthController::class, 'logout'])->name('logout');

@@ -60,6 +60,14 @@ Route::prefix('movements')->name('movements.')->group(function () {
     Route::post('/', [App\Http\Controllers\MovementController::class, 'store'])->name('store');
 });
 
+// Notifications
+Route::prefix('notifications')->name('notifications.')->group(function () {
+    Route::get('/stock', [App\Http\Controllers\NotificationController::class, 'getStockNotifications'])->name('stock');
+    Route::get('/count', [App\Http\Controllers\NotificationController::class, 'getNotificationCount'])->name('count');
+    Route::get('/stats', [App\Http\Controllers\NotificationController::class, 'getNotificationStats'])->name('stats');
+    Route::post('/mark-read', [App\Http\Controllers\NotificationController::class, 'markAsRead'])->name('mark-read');
+});
+
 // Sales
 Route::prefix('invoices')->name('invoices.')->group(function () {
     Route::get('/', fn() => view('invoices.index'))->name('index');

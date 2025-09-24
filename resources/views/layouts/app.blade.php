@@ -4,6 +4,7 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>{{ $title ?? 'Stock Manager' }}</title>
     <!-- TailwindCSS via CDN for guaranteed styling -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -219,6 +220,17 @@
                     <h1 class="font-heading text-lg text-gray-900">{{ $page ?? 'Dashboards' }}</h1>
                 </div>
                 <div class="flex items-center gap-3">
+                    <!-- Icône de notification -->
+                    <div class="relative">
+                        <button id="notificationBtn" class="p-2 rounded-lg hover:bg-gray-100 transition-colors relative" title="Notifications">
+                            <svg class="w-6 h-6 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"></path>
+                            </svg>
+                            <!-- Badge de notification -->
+                            <span id="notificationBadge" class="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center hidden">0</span>
+                        </button>
+                    </div>
+                    
                     <div class="hidden md:flex items-center gap-2 px-3 py-1.5 rounded-full border">
                         <span class="w-2 h-2 rounded-full bg-green-500"></span>
                         <span class="text-sm">Online</span>
@@ -228,6 +240,55 @@
                         SM</div>
                 </div>
             </header>
+
+            <!-- Modal de notifications -->
+            <div id="notificationModal" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden">
+                <div class="flex items-start justify-center min-h-screen pt-16 px-4">
+                    <div class="bg-white rounded-2xl shadow-xl max-w-2xl w-full max-h-[80vh] overflow-hidden">
+                        <!-- En-tête du modal -->
+                        <div class="flex items-center justify-between p-6 border-b">
+                            <div class="flex items-center gap-3">
+                                <div class="p-2 bg-red-100 rounded-lg">
+                                    <svg class="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"></path>
+                                    </svg>
+                                </div>
+                                <div>
+                                    <h3 class="text-lg font-semibold text-gray-900">Alertes de Stock</h3>
+                                    <p class="text-sm text-gray-500">Produits nécessitant votre attention</p>
+                                </div>
+                            </div>
+                            <button id="closeNotificationModal" class="p-2 hover:bg-gray-100 rounded-lg transition-colors">
+                                <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                                </svg>
+                            </button>
+                        </div>
+                        
+                        <!-- Contenu du modal -->
+                        <div class="p-6 overflow-y-auto max-h-96">
+                            <div id="notificationContent">
+                                <!-- Le contenu sera chargé dynamiquement -->
+                                <div class="flex items-center justify-center py-8">
+                                    <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600"></div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Pied du modal -->
+                        <div class="px-6 py-4 bg-gray-50 border-t">
+                            <div class="flex items-center justify-between">
+                                <p class="text-sm text-gray-500">
+                                    Dernière mise à jour : <span id="lastUpdateTime">-</span>
+                                </p>
+                                <button id="refreshNotifications" class="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors">
+                                    Actualiser
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
 
             <main class="p-6">
                 @yield('content')
@@ -287,6 +348,156 @@
     @if(session('info'))
       toastr.info('{{ session('info') }}');
     @endif
+
+    // Système de notifications
+    document.addEventListener('DOMContentLoaded', function() {
+        const notificationBtn = document.getElementById('notificationBtn');
+        const notificationModal = document.getElementById('notificationModal');
+        const closeNotificationModal = document.getElementById('closeNotificationModal');
+        const refreshNotifications = document.getElementById('refreshNotifications');
+        const notificationBadge = document.getElementById('notificationBadge');
+        const notificationContent = document.getElementById('notificationContent');
+        const lastUpdateTime = document.getElementById('lastUpdateTime');
+
+        // Charger le nombre de notifications au démarrage
+        loadNotificationCount();
+
+        // Actualiser le nombre de notifications toutes les 30 secondes
+        setInterval(loadNotificationCount, 30000);
+
+        // Événements
+        notificationBtn.addEventListener('click', openNotificationModal);
+        closeNotificationModal.addEventListener('click', closeModal);
+        refreshNotifications.addEventListener('click', loadNotifications);
+        
+        // Fermer le modal en cliquant à l'extérieur
+        notificationModal.addEventListener('click', function(e) {
+            if (e.target === notificationModal) {
+                closeModal();
+            }
+        });
+
+        function loadNotificationCount() {
+            fetch('{{ route('notifications.count') }}')
+                .then(response => response.json())
+                .then(data => {
+                    updateNotificationBadge(data.count);
+                })
+                .catch(error => {
+                    console.error('Erreur lors du chargement du nombre de notifications:', error);
+                });
+        }
+
+        function updateNotificationBadge(count) {
+            if (count > 0) {
+                notificationBadge.textContent = count > 99 ? '99+' : count;
+                notificationBadge.classList.remove('hidden');
+                notificationBtn.classList.add('animate-pulse');
+            } else {
+                notificationBadge.classList.add('hidden');
+                notificationBtn.classList.remove('animate-pulse');
+            }
+        }
+
+        function openNotificationModal() {
+            notificationModal.classList.remove('hidden');
+            loadNotifications();
+        }
+
+        function closeModal() {
+            notificationModal.classList.add('hidden');
+        }
+
+        function loadNotifications() {
+            // Afficher le spinner
+            notificationContent.innerHTML = `
+                <div class="flex items-center justify-center py-8">
+                    <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600"></div>
+                </div>
+            `;
+
+            fetch('{{ route('notifications.stock') }}')
+                .then(response => response.json())
+                .then(data => {
+                    displayNotifications(data.notifications);
+                    lastUpdateTime.textContent = new Date().toLocaleString('fr-FR');
+                })
+                .catch(error => {
+                    console.error('Erreur lors du chargement des notifications:', error);
+                    notificationContent.innerHTML = `
+                        <div class="text-center py-8">
+                            <div class="text-red-500 mb-2">
+                                <svg class="w-12 h-12 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                </svg>
+                            </div>
+                            <p class="text-gray-500">Erreur lors du chargement des notifications</p>
+                        </div>
+                    `;
+                });
+        }
+
+        function displayNotifications(notifications) {
+            if (notifications.length === 0) {
+                notificationContent.innerHTML = `
+                    <div class="text-center py-8">
+                        <div class="text-green-500 mb-2">
+                            <svg class="w-12 h-12 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                            </svg>
+                        </div>
+                        <h3 class="text-lg font-medium text-gray-900 mb-1">Tout va bien !</h3>
+                        <p class="text-gray-500">Aucune alerte de stock pour le moment</p>
+                    </div>
+                `;
+                return;
+            }
+
+            let html = '<div class="space-y-4">';
+            
+            notifications.forEach(notification => {
+                const priorityColor = notification.priority === 'high' ? 'border-red-200 bg-red-50' : 'border-orange-200 bg-orange-50';
+                const iconColor = notification.priority === 'high' ? 'text-red-600' : 'text-orange-600';
+                
+                html += `
+                    <div class="border ${priorityColor} rounded-lg p-4">
+                        <div class="flex items-start gap-3">
+                            <div class="flex-shrink-0">
+                                <svg class="w-5 h-5 ${iconColor}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"></path>
+                                </svg>
+                            </div>
+                            <div class="flex-1">
+                                <h4 class="font-medium text-gray-900">${notification.details.product_name}</h4>
+                                <p class="text-sm text-gray-600 mt-1">SKU: ${notification.details.sku}</p>
+                                <div class="mt-2 grid grid-cols-2 gap-4 text-sm">
+                                    <div>
+                                        <span class="text-gray-500">Stock actuel:</span>
+                                        <span class="font-medium text-gray-900">${notification.details.stock_actuel}</span>
+                                    </div>
+                                    <div>
+                                        <span class="text-gray-500">Seuil:</span>
+                                        <span class="font-medium text-gray-900">${notification.details.seuil}</span>
+                                    </div>
+                                    <div>
+                                        <span class="text-gray-500">Seuil d'alerte:</span>
+                                        <span class="font-medium text-orange-600">${notification.details.seuil_alerte}</span>
+                                    </div>
+                                    <div>
+                                        <span class="text-gray-500">Niveau:</span>
+                                        <span class="font-medium ${notification.priority === 'high' ? 'text-red-600' : 'text-orange-600'}">${notification.details.pourcentage}%</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+            
+            html += '</div>';
+            notificationContent.innerHTML = html;
+        }
+    });
   </script>
 </body>
 

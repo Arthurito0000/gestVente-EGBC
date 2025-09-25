@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login • Stock Manager</title>
+    <title>Verif email • Stock Manager</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = {
@@ -95,12 +95,12 @@
                     <div class="flex justify-center items-center">
                         <img src="{{ asset('images/logo.png') }}" alt="logo" class="h-[120px] items-center" />
                     </div>
-                    <h1 class="font-heading text-2xl text-gray-900">Se connecter</h1>
-                    <p class="text-gray-500">Accédez à votre tableau de bord</p>
+                    <h1 class="font-heading text-2xl text-gray-900">Verification email</h1>
+                    <p class="text-gray-500">Entrer votre addresse mail</p>
                 </div>
 
                 <div class="bg-white rounded-2xl border border-gray-200 shadow-md p-6 md:p-8">
-                    <form action="{{ route('login') }}" method="POST" class="space-y-6">
+                    <form action="{{ route('verification.send') }}" method="POST" class="space-y-6">
                         @csrf
                         @if (session('error'))
                             <div class="bg-red-100 text-red-700 p-3 rounded mb-4">
@@ -128,51 +128,15 @@
                             </div>
 
                         </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Mot de passe</label>
-                            <div class="relative">
-                                <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-400">
-                                    <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                        stroke-width="1.5">
-                                        <path stroke-linecap="round" stroke-linejoin="round"
-                                            d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-                                    </svg>
-                                </span>
-                                <input type="password" name="password"
-                                    class="w-full rounded-lg border border-gray-300 bg-gray-50 hover:bg-white focus:bg-white focus:ring-2 focus:ring-primary-600 focus:border-primary-600 transition-colors pl-10 pr-10 py-3 text-sm"
-                                    placeholder="••••••••" />
-                                <button type="button"
-                                    class="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600"
-                                    aria-label="Afficher le mot de passe">
-                                    <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                        stroke-width="1.5">
-                                        <path stroke-linecap="round" stroke-linejoin="round"
-                                            d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.964-7.178z" />
-                                        <path stroke-linecap="round" stroke-linejoin="round"
-                                            d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                                    </svg>
-                                </button>
-                            </div>
-                        </div>
-                        <div class="flex items-center justify-between text-sm">
-                            <label class="inline-flex items-center gap-2">
-                                <input type="checkbox"
-                                    class="rounded border-gray-300 text-primary-600 focus:ring-primary-600" />
-                                Se souvenir de moi
-                            </label>
-                            <a class="text-primary-700 hover:text-primary-600"
-                                href="{{ route('verification.notice') }}">Mot de passe oublié ?</a>
-                        </div>
+
+
                         <button type="submit"
-                            class="w-full bg-primary-600 hover:bg-primary-700 text-white font-medium rounded-lg py-3 shadow-md">Connexion</button>
+                            class="w-full bg-primary-600 hover:bg-primary-700 text-white font-medium rounded-lg py-3 shadow-md">Verifier
+                            email</button>
                     </form>
                 </div>
 
-                <div class="mt-6 text-xs text-gray-500 text-center">
-                    En continuant, vous acceptez nos <a href="#"
-                        class="underline hover:text-gray-700">conditions</a> et notre <a href="#"
-                        class="underline hover:text-gray-700">politique de confidentialité</a>.
-                </div>
+
             </div>
         </div>
     </div>

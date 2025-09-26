@@ -20,14 +20,14 @@
                 <p class="text-gray-500">Détails de la facture — {{ $date }}</p>
             </div>
             <div class="flex items-center gap-2">
-                <a href="{{ route('invoices.download', $invoice) }}" target="_blank"
-                    class="inline-flex items-center gap-2 bg-primary-600 hover:bg-primary-700 text-white rounded-lg px-4 py-2">
+                <a href="{{ route('invoices.print', $invoice) }}" target="_blank"
+                    class="inline-flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white rounded-lg px-4 py-2">
                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
                         stroke="currentColor" class="w-5 h-5">
                         <path stroke-linecap="round" stroke-linejoin="round"
-                            d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M7.5 12l4.5 4.5m0 0L16.5 12m-4.5 4.5V3" />
+                            d="M6.72 13.829c-.24.03-.48.062-.72.096m.72-.096a42.415 42.415 0 0110.56 0m-10.56 0L6.34 18m10.94-4.171c.24.03.48.062.72.096m-.72-.096L17.66 18m0 0l.229 2.523a1.125 1.125 0 01-1.12 1.227H7.231c-.662 0-1.18-.568-1.12-1.227L6.34 18m11.318 0h1.091A2.25 2.25 0 0021 15.75V9.456c0-1.081-.768-2.015-1.837-2.175a48.055 48.055 0 00-1.913-.247M6.34 18H5.25A2.25 2.25 0 013 15.75V9.456c0-1.081.768-2.015 1.837-2.175a48.041 48.041 0 011.913-.247m10.5 2.19L8.75 6.5m12.5 3.75h-2.25m-12.5 0h2.25" />
                     </svg>
-                    Télécharger PDF
+                    Imprimer
                 </a>
                 <a href="{{ route('invoices.index') }}"
                     class="inline-flex items-center gap-2 border rounded-lg px-4 py-2 hover:bg-gray-50">Retour</a>

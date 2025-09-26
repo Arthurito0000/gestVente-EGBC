@@ -13,6 +13,7 @@ class Movement extends Model
     protected $fillable = [
         'product_id',
         'type',
+        'ajustement_type',
         'quantite',
         'prix_achat',
         'motif',

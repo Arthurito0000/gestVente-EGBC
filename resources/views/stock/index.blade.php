@@ -30,6 +30,7 @@
     <div class="p-4 border-b flex items-center justify-between">
       <div class="text-sm text-gray-600">Niveaux actuels</div>
       <div class="flex items-center gap-2 text-sm">
+        @can('export-stock')
         <!-- Bouton Export Excel -->
         <button id="exportExcelBtn" class="flex items-center gap-2 px-3 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors" title="Exporter en Excel">
           <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
@@ -47,6 +48,7 @@
           </svg>
           PDF
         </button>
+        @endcan
         
         <!-- Bouton Inventaire -->
         <button id="inventaireBtn" class="flex items-center gap-2 px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors" title="Fiche d'inventaire">

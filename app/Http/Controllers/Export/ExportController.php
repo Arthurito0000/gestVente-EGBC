@@ -86,16 +86,25 @@ class ExportController extends Controller
      */
     public function stocksPdf(Request $request)
     {
-        $search = $request->get('search');
-        $filters = [
-            'stock_faible' => $request->get('stock_faible'),
-            'stock_zero' => $request->get('stock_zero'),
-            'seuil_min' => $request->get('seuil_min')
-        ];
-        
-        $export = new StocksPdfExport($search, $filters);
-        
-        return $export->download();
+        try {
+            $search = $request->get('search');
+            $filters = [
+                'stock_faible' => $request->get('stock_faible'),
+                'stock_zero' => $request->get('stock_zero'),
+                'seuil_min' => $request->get('seuil_min')
+            ];
+            
+            $export = new StocksPdfExport($search, $filters);
+            
+            return $export->download();
+        } catch (\Exception $e) {
+            return response()->json([
+                'error' => 'Erreur lors de l\'exportation PDF des stocks',
+                'message' => $e->getMessage(),
+                'line' => $e->getLine(),
+                'file' => $e->getFile()
+            ], 500);
+        }
     }
 
     /**
@@ -135,6 +144,54 @@ class ExportController extends Controller
             'pdf' => $pdfExport->getStats(),
             'stocks_by_status' => $pdfExport->getStocksByStatus()
         ]);
+    }
+
+    /**
+     * Afficher le PDF des stocks dans le navigateur (avec mPDF)
+     */
+    public function stocksView(Request $request)
+    {
+        try {
+            $search = $request->get('search');
+            $filters = [
+                'stock_faible' => $request->get('stock_faible'),
+                'stock_zero' => $request->get('stock_zero'),
+                'seuil_min' => $request->get('seuil_min')
+            ];
+            
+            $export = new StocksPdfExport($search, $filters);
+            
+            return $export->viewPdf();
+        } catch (\Exception $e) {
+            return response()->json([
+                'error' => 'Erreur lors de l\'affichage du PDF des stocks',
+                'message' => $e->getMessage(),
+                'line' => $e->getLine(),
+                'file' => $e->getFile()
+            ], 500);
+        }
+    }
+
+    /**
+     * Test simple pour diagnostiquer le problème PDF stocks
+     */
+    public function stocksTest(Request $request)
+    {
+        try {
+            // Test simple sans filtres
+            $export = new StocksPdfExport();
+            
+            // Test de la génération PDF avec mPDF
+            return $export->viewPdf();
+        } catch (\Exception $e) {
+            return response()->json([
+                'error' => 'Test échoué',
+                'message' => $e->getMessage(),
+                'line' => $e->getLine(),
+                'file' => $e->getFile(),
+                'trace' => $e->getTraceAsString()
+            ], 500);
+        }
     }
 
     public function movementsExcel(Request $request)

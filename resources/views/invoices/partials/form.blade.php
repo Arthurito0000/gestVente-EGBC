@@ -76,12 +76,13 @@
             </div>
             <div>
                 <label class="block text-sm font-medium text-gray-700 mb-1">Vendeur</label>
-                <input name="vendor_name" type="text" value="{{ old('vendor_name', $invoice->vendor_name ?? '') }}"
+                <input name="vendor_name" type="text" value="{{ old('vendor_name', $invoice->vendor_name ?? auth()->user()->name) }}"
                     class="w-full rounded-lg border-gray-300 focus:ring-primary-600 focus:border-primary-600 px-3 py-3"
-                    placeholder="Magasin Central" />
+                    placeholder="{{ auth()->user()->name }}" readonly />
                 @error('vendor_name')
                     <p class="mt-1 text-xs text-red-600">{{ $message }}</p>
                 @enderror
+                <p class="mt-1 text-xs text-gray-500">Vendeur connecté automatiquement renseigné</p>
             </div>
 
 

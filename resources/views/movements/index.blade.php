@@ -9,9 +9,7 @@
     </div>
     <div class="flex items-center gap-3">
       <button id="refreshBtn" class="px-4 py-2 rounded-lg border">Actualiser</button>
-      <div class="relative">
-        <a href="{{ route('movements.create') }}" class="bg-primary-600 hover:bg-primary-700 text-white rounded-lg px-4 py-2">Nouveau mouvement</a>
-      </div>
+      <a href="{{ route('movements.create') }}" class="bg-primary-600 hover:bg-primary-700 text-white rounded-lg px-4 py-2">Nouveau mouvement</a>
     </div>
   </div>
 

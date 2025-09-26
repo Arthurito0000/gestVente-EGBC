@@ -84,40 +84,8 @@ class InvoiceController extends Controller
             // Load relations
             $invoice->load('products');
     
-            // Render Blade view
-            $html = view('invoices.partials.invoice', compact('invoice'))->render();
-    
-            // Ensure temporary directory exists for mPDF
-            $tempPath = storage_path('app/mpdf-temp');
-            if (!is_dir($tempPath)) {
-                @mkdir($tempPath, 0775, true);
-            }
-    
-            // Configure mPDF
-            $mpdf = new Mpdf([
-                'default_font' => 'dejavusans',
-                'tempDir' => $tempPath,
-            ]);
-    
-            $chunks = str_split($html, 100000); // ou 100000, à ajuster si nécessaire
-            foreach ($chunks as $chunk) {
-                $mpdf->WriteHTML($chunk);
-            }
-
-    
-            // Save to file
-            $invoiceStoragePath = storage_path('app/public/invoices');
-            if (!is_dir($invoiceStoragePath)) {
-                mkdir($invoiceStoragePath, 0775, true);
-            }
-            
-            // Save PDF to file
-            $filename = 'Facture_' . $invoice->invoice_number . '.pdf';
-            $path = $invoiceStoragePath . '/' . $filename;
-            $mpdf->Output($path, \Mpdf\Output\Destination::FILE);
-    
-            // Redirect to index with download link in session
-            return redirect()->route('invoices.index')->with('pdf_download', asset('storage/invoices/' . $filename));
+            // Rediriger vers la page d'impression au lieu de générer un PDF
+            return redirect()->route('invoices.print', $invoice->id)->with('success', 'Facture créée avec succès ! Vous pouvez maintenant l\'imprimer.');
     
         } catch (\Throwable $e) {
             DB::rollBack();
@@ -130,6 +98,15 @@ class InvoiceController extends Controller
     }
     
     
+
+    /**
+     * Afficher la page d'impression de la facture
+     */
+    public function print(string $id)
+    {
+        $invoice = Invoice::with('products')->findOrFail($id);
+        return view('invoices.partials.invoice', compact('invoice'));
+    }
 
     /**
      * Display the specified resource.

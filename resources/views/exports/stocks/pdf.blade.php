@@ -24,32 +24,6 @@
             margin: 5px 0;
             color: #666;
         }
-        .stats {
-            margin: 15px 0;
-            padding: 15px;
-            background-color: #f8f9fa;
-            border-radius: 5px;
-            display: flex;
-            justify-content: space-between;
-        }
-        .stats-section {
-            text-align: center;
-            flex: 1;
-        }
-        .stats-section h3 {
-            margin: 0 0 10px 0;
-            color: #374151;
-            font-size: 12px;
-        }
-        .stats-value {
-            font-size: 14px;
-            font-weight: bold;
-            margin: 5px 0;
-        }
-        .stats-normal { color: #10b981; }
-        .stats-warning { color: #f59e0b; }
-        .stats-danger { color: #ef4444; }
-        .stats-info { color: #3b82f6; }
         
         table {
             width: 100%;
@@ -143,29 +117,6 @@
         @endif
     </div>
 
-    <!-- Statistiques générales -->
-    <div class="stats">
-        <div class="stats-section">
-            <h3>Stocks Normaux</h3>
-            <div class="stats-value stats-normal">{{ $stats['stocks_normaux'] }}</div>
-            <small>{{ $stats['total_stocks'] > 0 ? round(($stats['stocks_normaux'] / $stats['total_stocks']) * 100, 1) : 0 }}%</small>
-        </div>
-        <div class="stats-section">
-            <h3>Stocks Faibles</h3>
-            <div class="stats-value stats-warning">{{ $stats['stocks_faibles'] }}</div>
-            <small>{{ $stats['total_stocks'] > 0 ? round(($stats['stocks_faibles'] / $stats['total_stocks']) * 100, 1) : 0 }}%</small>
-        </div>
-        <div class="stats-section">
-            <h3>Ruptures</h3>
-            <div class="stats-value stats-danger">{{ $stats['ruptures_stock'] }}</div>
-            <small>{{ $stats['total_stocks'] > 0 ? round(($stats['ruptures_stock'] / $stats['total_stocks']) * 100, 1) : 0 }}%</small>
-        </div>
-        <div class="stats-section">
-            <h3>Valeur Totale</h3>
-            <div class="stats-value stats-info">{{ number_format($stats['valeur_totale_stock'], 0, ',', ' ') }}</div>
-            <small>Fcfa</small>
-        </div>
-    </div>
 
     <!-- Résumé par statut -->
     @if($stats['ruptures_stock'] > 0)

@@ -7,11 +7,44 @@
     <style>
         body {
             font-family: monospace, sans-serif;
-            font-size: 10px;
-            width: 58mm;
+            font-size: 12px;
+            max-width: 210mm;
             margin: 0 auto;
-            padding: 0;
+            padding: 20mm;
             color: #000;
+            background: white;
+        }
+        
+        @media screen {
+            body {
+                background: #f5f5f5;
+                padding: 40px;
+            }
+            
+            .invoice-container {
+                background: white;
+                padding: 40px;
+                border-radius: 8px;
+                box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+                max-width: 210mm;
+                margin: 0 auto;
+            }
+        }
+        
+        @media print {
+            body {
+                background: white;
+                padding: 20mm;
+            }
+            
+            .invoice-container {
+                background: white;
+                padding: 0;
+                box-shadow: none;
+                border-radius: 0;
+            }
+            
+            .no-print { display: none !important; }
         }
 
         .center {
@@ -78,14 +111,54 @@
         .visa-table td.right {
             text-align: right;
         }
+        
+        .print-button {
+            background: #059669;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 12px;
+            margin: 10px 5px;
+            transition: background 0.3s;
+        }
+        
+        .print-button:hover {
+            background: #047857;
+        }
+        
+        .back-button {
+            background: #6b7280;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 12px;
+            margin: 10px 5px;
+            text-decoration: none;
+            display: inline-block;
+            transition: background 0.3s;
+        }
+        
+        .back-button:hover {
+            background: #4b5563;
+        }
+        
+        .button-container {
+            text-align: center;
+            margin: 20px 0;
+        }
+        
     </style>
 </head>
 
 <body>
-
-    <div class="center bold">
-        ETS GLASS LE BIEN CONSTRUCTION (EGBC)
-    </div>
+    <div class="invoice-container">
+        <div class="center bold">
+            ETS GLASS LE BIEN CONSTRUCTION (EGBC)
+        </div>
     <div class="center">
         Agence PK19<br>
         VITRERIE - MENUSERIE - ALUMINIUM<br>
@@ -164,6 +237,24 @@
             </tr>
         </table>
     </div>
+    
+        <!-- Boutons d'action (masqués à l'impression) -->
+        <div class="button-container no-print">
+            <button class="print-button" onclick="window.print()">
+                🖨️ Imprimer la facture
+            </button>
+            <a href="{{ route('invoices.index') }}" class="back-button">
+                ← Retour à la liste
+            </a>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Optionnel: ouvrir automatiquement la boîte d'impression
+            // window.print();
+        });
+    </script>
 </body>
 
 </html>

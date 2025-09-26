@@ -8,6 +8,8 @@
     <title>{{ $title ?? 'Stock Manager' }}</title>
     <!-- TailwindCSS via CDN for guaranteed styling -->
     <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Alpine.js pour les interactions -->
+    <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
     <script>
         tailwind.config = {
             theme: {
@@ -83,6 +85,35 @@
         #sidebar nav a {
             transition: padding 200ms, gap 200ms;
         }
+        
+        /* SOLUTION DEFINITIVE - Menu utilisateur au-dessus de TOUT */
+        .user-dropdown {
+            z-index: 99999 !important;
+            position: relative !important;
+        }
+        
+        .dropdown-menu {
+            z-index: 99999 !important;
+            position: absolute !important;
+        }
+        
+        /* Forcer TOUS les champs de recherche à rester en bas */
+        .relative:has(input[type="text"]) {
+            z-index: -1 !important;
+        }
+        
+        .relative input[type="text"] {
+            z-index: -1 !important;
+        }
+        
+        .relative .absolute {
+            z-index: -1 !important;
+        }
+        
+        /* Forcer spécifiquement les pages produits et stock */
+        .space-y-6 .relative {
+            z-index: -1 !important;
+        }
     </style>
 </head>
 
@@ -104,6 +135,9 @@
             <!-- Nav -->
             <nav class="flex-1 overflow-y-auto px-3 py-4">
                 <ul class="space-y-1">
+                    <!-- Dashboard - Accessible à tous les utilisateurs connectés -->
+                    @auth
+                    @can('view-dashboard')
                     <li>
                         <a href="{{ route('dashboard') }}"
                             class="group flex items-center gap-x-3 px-3 py-2 rounded-lg hover:bg-white/10 {{ request()->routeIs('dashboard') ? 'bg-white/10' : '' }}">
@@ -115,9 +149,15 @@
                             <span class="truncate nav-label">Dashboard</span>
                         </a>
                     </li>
+                    @endcan
+
+                    <!-- Section Inventaire -->
+                    @if(auth()->user()->can('view-products') || auth()->user()->can('view-stock') || auth()->user()->can('view-movements') || auth()->user()->can('manage-categories'))
                     <li>
                         <div class="text-xs uppercase tracking-wider text-white/70 px-3 pt-4 pb-1 section-label">
                             Inventaire</div>
+                        
+                        @can('manage-categories')
                         <a href="{{ route('categories.index') }}"
                             class="group flex items-center gap-x-3 px-3 py-2 rounded-lg hover:bg-white/10 {{ request()->routeIs('categories.*') ? 'bg-white/10' : '' }}">
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -126,6 +166,9 @@
                             </svg>
                             <span class="truncate nav-label">Catégories</span>
                         </a>
+                        @endcan
+
+                        @can('view-products')
                         <a href="{{ route('products.index') }}"
                             class="group flex items-center gap-x-3 px-3 py-2 rounded-lg hover:bg-white/10 {{ request()->routeIs('products.*') ? 'bg-white/10' : '' }}">
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -134,6 +177,9 @@
                             </svg>
                             <span class="truncate nav-label">Produits</span>
                         </a>
+                        @endcan
+
+                        @can('view-stock')
                         <a href="{{ route('stock.index') }}"
                             class="group flex items-center gap-x-3 px-3 py-2 rounded-lg hover:bg-white/10 {{ request()->routeIs('stock.*') ? 'bg-white/10' : '' }}">
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -142,6 +188,9 @@
                             </svg>
                             <span class="truncate nav-label">Stock</span>
                         </a>
+                        @endcan
+
+                        @can('view-movements')
                         <a href="{{ route('movements.index') }}"
                             class="group flex items-center gap-x-3 px-3 py-2 rounded-lg hover:bg-white/10 {{ request()->routeIs('movements.*') ? 'bg-white/10' : '' }}">
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -150,7 +199,12 @@
                             </svg>
                             <span class="truncate nav-label">Mouvements</span>
                         </a>
+                        @endcan
                     </li>
+                    @endif
+
+                    <!-- Section Ventes -->
+                    @can('view-sales')
                     <li>
                         <div class="text-xs uppercase tracking-wider text-white/70 px-3 pt-4 pb-1 section-label">Ventes
                         </div>
@@ -163,9 +217,15 @@
                             <span class="truncate nav-label">Factures</span>
                         </a>
                     </li>
+                    @endcan
+
+                    <!-- Section Administration -->
+                    @if(auth()->user()->can('manage-users') || auth()->user()->can('manage-roles') || auth()->user()->can('manage-permissions'))
                     <li>
                         <div class="text-xs uppercase tracking-wider text-white/70 px-3 pt-4 pb-1 section-label">
                             Administration</div>
+                        
+                        @can('manage-users')
                         <a href="{{ route('users.index') }}"
                             class="group flex items-center gap-x-3 px-3 py-2 rounded-lg hover:bg-white/10 {{ request()->routeIs('users.*') ? 'bg-white/10' : '' }}">
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -174,23 +234,21 @@
                             </svg>
                             <span class="truncate nav-label">Utilisateurs</span>
                         </a>
-                        <a href="{{ route('roles.index') }}"
-                            class="group flex items-center gap-x-3 px-3 py-2 rounded-lg hover:bg-white/10 {{ request()->routeIs('roles.*') ? 'bg-white/10' : '' }}">
+                        @endcan
+
+                        @can('manage-roles')
+                        <a href="{{ route('users.roles') }}"
+                            class="group flex items-center gap-x-3 px-3 py-2 rounded-lg hover:bg-white/10 {{ request()->routeIs('users.roles*') ? 'bg-white/10' : '' }}">
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
                                     d="M5.121 17.804A13.937 13.937 0 0112 15c2.5 0 4.847.655 6.879 1.804M15 10a3 3 0 11-6 0 3 3 0 016 0z" />
                             </svg>
-                            <span class="truncate nav-label">Rôles</span>
+                            <span class="truncate nav-label">Rôles & Permissions</span>
                         </a>
-                        <a href="{{ route('permissions.index') }}"
-                            class="group flex items-center gap-x-3 px-3 py-2 rounded-lg hover:bg-white/10 {{ request()->routeIs('permissions.*') ? 'bg-white/10' : '' }}">
-                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
-                                    d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                            </svg>
-                            <span class="truncate nav-label">Permissions</span>
-                        </a>
+                        @endcan
                     </li>
+                    @endif
+                    @endauth
                 </ul>
             </nav>
             <div class="p-3 border-t border-white/10">
@@ -222,7 +280,9 @@
                     <h1 class="font-heading text-lg text-gray-900">{{ $page ?? 'Dashboards' }}</h1>
                 </div>
                 <div class="flex items-center gap-3">
-                    <!-- Icône de notification -->
+                    <!-- Icône de notification (seulement si l'utilisateur peut recevoir des alertes) -->
+                    @auth
+                    @can('receive-stock-alerts')
                     <div class="relative">
                         <button id="notificationBtn" class="p-2 rounded-lg hover:bg-gray-100 transition-colors relative" title="Notifications">
                             <svg class="w-6 h-6 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -232,14 +292,78 @@
                             <span id="notificationBadge" class="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center hidden">0</span>
                         </button>
                     </div>
+                    @endcan
                     
                     <div class="hidden md:flex items-center gap-2 px-3 py-1.5 rounded-full border">
                         <span class="w-2 h-2 rounded-full bg-green-500"></span>
                         <span class="text-sm">Online</span>
                     </div>
-                    <div
-                        class="w-9 h-9 rounded-full bg-primary-600 text-white flex items-center justify-center font-heading">
-                        SM</div>
+
+                    <!-- Menu utilisateur -->
+                    <div class="relative user-dropdown" x-data="{ open: false }" style="z-index: 99999 !important; position: relative !important;">
+                        <button @click="open = !open" class="flex items-center gap-2 p-2 rounded-lg hover:bg-gray-100 transition-colors">
+                            <div class="w-9 h-9 rounded-full bg-primary-600 text-white flex items-center justify-center font-heading text-sm">
+                                {{ strtoupper(substr(auth()->user()->name, 0, 2)) }}
+                            </div>
+                            <div class="hidden md:block text-left">
+                                <div class="text-sm font-medium text-gray-900">{{ auth()->user()->name }}</div>
+                                <div class="text-xs text-gray-500">{{ auth()->user()->getFormattedRoleName() }}</div>
+                            </div>
+                            <svg class="w-4 h-4 text-gray-400" :class="{'rotate-180': open}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                            </svg>
+                        </button>
+
+                        <!-- Menu déroulant -->
+                        <div x-show="open" @click.away="open = false" x-transition class="dropdown-menu absolute right-0 mt-2 w-64 bg-white rounded-lg shadow-lg border py-2" style="z-index: 99999 !important; position: absolute !important;">
+                            <div class="px-4 py-3 border-b">
+                                <div class="flex items-center gap-3">
+                                    <div class="w-10 h-10 rounded-full bg-primary-600 text-white flex items-center justify-center font-heading">
+                                        {{ strtoupper(substr(auth()->user()->name, 0, 2)) }}
+                                    </div>
+                                    <div>
+                                        <div class="font-medium text-gray-900">{{ auth()->user()->name }}</div>
+                                        <div class="text-sm text-gray-500">{{ auth()->user()->email }}</div>
+                                        <div class="text-xs text-primary-600 font-medium">{{ auth()->user()->getFormattedRoleName() }}</div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="py-2">
+                                @can('manage-users')
+                                <a href="{{ route('users.show', auth()->user()) }}" class="flex items-center gap-3 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
+                                    </svg>
+                                    Mon profil
+                                </a>
+                                @endcan
+                                
+                                {{-- Paramètres temporairement masqué - fonctionnalité non implémentée
+                                <a href="#" class="flex items-center gap-3 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path>
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                                    </svg>
+                                    Paramètres
+                                </a>
+                                --}}
+                                
+                                <div class="border-t my-2"></div>
+                                
+                                <form method="POST" action="{{ route('logout') }}">
+                                    @csrf
+                                    <button type="submit" class="flex items-center gap-3 px-4 py-2 text-sm text-red-600 hover:bg-red-50 w-full text-left">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path>
+                                        </svg>
+                                        Se déconnecter
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                    @endauth
                 </div>
             </header>
 

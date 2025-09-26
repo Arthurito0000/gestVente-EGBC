@@ -13,6 +13,21 @@ Route::get('/', function () { return redirect()->route('login'); });
 // Auth (frontend-only)
 Route::get('/login', function () { return view('auth.login'); })->name('login');
 
+// Auth routes
+Route::get('/login', [AuthController::class, 'showLoginForm'])->name('login');
+Route::post('/login', [AuthController::class, 'login'])->name('login.post');
+Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
+// Request reset link (email form)
+Route::get('/email/verify', [AuthController::class, 'showEmailVerificationForm'])->name('verification.notice');
+Route::post('/email/verify', [AuthController::class, 'sendVerificationEmail'])->name('verification.send');
+
+// Reset password via secure token link
+Route::get('password/reset/{token}', [AuthController::class, 'showPasswordResetForm'])->name('password.reset');
+Route::post('password/reset', [AuthController::class, 'resetPassword'])->name('password.update');
+
+// Protected routes
+Route::middleware('auth')->group(function () {
+    
 // Dashboard
 Route::get('/dashboard', function () { return view('dashboard'); })->name('dashboard')->middleware(['auth', 'permission:view-dashboard']);
 
@@ -114,7 +129,4 @@ Route::middleware(['auth'])->group(function () {
     Route::get('invoices/{invoice}/download', [InvoiceController::class, 'download'])->name('invoices.download')->middleware('permission:view-sales');
 });
 
-// Auth routes
-Route::get('/login', [AuthController::class, 'showLoginForm'])->name('login');
-Route::post('/login', [AuthController::class, 'login'])->name('login.post');
-Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
+});

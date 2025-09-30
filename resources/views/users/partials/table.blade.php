@@ -12,6 +12,9 @@
                     Rôle
                 </th>
                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Statut
+                </th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Créé le
                 </th>
                 <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -64,6 +67,9 @@
                         </span>
                     @endif
                 </td>
+                <td class="px-6 py-4 whitespace-nowrap">
+                    {!! $user->getStatutBadge() !!}
+                </td>
                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                     {{ $user->created_at->format('d/m/Y') }}
                 </td>
@@ -89,6 +95,30 @@
                             </svg>
                         </a>
 
+                        <!-- Activer/Désactiver -->
+                        @if($user->id !== auth()->id())
+                        <form method="POST" action="{{ route('users.toggle-status', $user) }}" style="display: inline;">
+                            @csrf
+                            @method('PATCH')
+                            <button type="submit" 
+                                    class="p-2.5 text-gray-400 hover:text-{{ $user->statut === 'actif' ? 'orange' : 'green' }}-600 hover:bg-{{ $user->statut === 'actif' ? 'orange' : 'green' }}-50 rounded-xl transition-all duration-200 hover:scale-110"
+                                    title="{{ $user->statut === 'actif' ? 'Désactiver' : 'Activer' }} l'utilisateur"
+                                    onclick="return confirm('Êtes-vous sûr de vouloir {{ $user->statut === 'actif' ? 'désactiver' : 'activer' }} cet utilisateur ?')">
+                                @if($user->statut === 'actif')
+                                    <!-- Icône désactiver -->
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728L5.636 5.636m12.728 12.728L18.364 5.636M5.636 18.364l12.728-12.728"></path>
+                                    </svg>
+                                @else
+                                    <!-- Icône activer -->
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                    </svg>
+                                @endif
+                            </button>
+                        </form>
+                        @endif
+
                         <!-- Supprimer -->
                         @if($user->id !== auth()->id())
                         <button onclick="confirmDelete('{{ $user->name }}', '{{ route('users.destroy', $user) }}')" 
@@ -105,7 +135,7 @@
             </tr>
             @empty
             <tr>
-                <td colspan="5" class="px-6 py-12 text-center">
+                <td colspan="6" class="px-6 py-12 text-center">
                     <div class="flex flex-col items-center">
                         <svg class="w-12 h-12 text-gray-400 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z"></path>

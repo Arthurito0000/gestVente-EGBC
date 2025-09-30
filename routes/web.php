@@ -2,6 +2,8 @@
 
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\CategoryController;
+use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\SaleController;
 use App\Http\Controllers\UserManagementController;
 // use App\Http\Controllers\InvoiceController; // duplicate removed
 use Illuminate\Support\Facades\Route;
@@ -29,7 +31,7 @@ Route::post('password/reset', [AuthController::class, 'resetPassword'])->name('p
 Route::middleware('auth')->group(function () {
     
 // Dashboard
-Route::get('/dashboard', function () { return view('dashboard'); })->name('dashboard')->middleware(['auth', 'permission:view-dashboard']);
+Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard')->middleware(['auth', 'permission:view-dashboard']);
 
 // Inventory - Produits avec permissions
 Route::middleware(['auth'])->group(function () {
@@ -113,13 +115,27 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/users/roles/management', [UserManagementController::class, 'roles'])->name('users.roles')->middleware('permission:manage-roles');
     Route::get('/users/roles/{role}/permissions', [UserManagementController::class, 'getRolePermissions'])->name('users.roles.permissions')->middleware('permission:manage-permissions');
     Route::put('/users/roles/{role}/permissions', [UserManagementController::class, 'updateRolePermissions'])->name('users.roles.update')->middleware('permission:manage-permissions');
-    Route::post('/users/{user}/toggle-status', [UserManagementController::class, 'toggleStatus'])->name('users.toggle-status')->middleware('permission:manage-users');
+    Route::patch('/users/{user}/toggle-status', [UserManagementController::class, 'toggleStatus'])->name('users.toggle-status')->middleware('permission:manage-users');
 });
 
 //Categories
 Route::prefix('categories')->name('categories.')->group(function () {
     Route::get('/', [CategoryController::class, 'index'])->name('index');
     Route::post('/', [CategoryController::class, 'store'])->name('store');
+});
+
+// Sales - Gestion des ventes avec vérification de stock
+Route::middleware(['auth'])->group(function () {
+    Route::get('sales', [SaleController::class, 'index'])->name('sales.index')->middleware('permission:view-sales');
+    Route::get('sales/create', [SaleController::class, 'create'])->name('sales.create')->middleware('permission:create-sales');
+    Route::post('sales', [SaleController::class, 'store'])->name('sales.store')->middleware('permission:create-sales');
+    Route::get('sales/{sale}', [SaleController::class, 'show'])->name('sales.show')->middleware('permission:view-sales');
+    Route::get('sales/{sale}/edit', [SaleController::class, 'edit'])->name('sales.edit')->middleware('permission:edit-sales');
+    Route::put('sales/{sale}', [SaleController::class, 'update'])->name('sales.update')->middleware('permission:edit-sales');
+    Route::delete('sales/{sale}', [SaleController::class, 'destroy'])->name('sales.destroy')->middleware('permission:delete-sales');
+    
+    // API pour vérification de stock en temps réel
+    Route::get('api/products/{product}/stock', [SaleController::class, 'checkStock'])->name('api.products.stock');
 });
 
 // Invoices - Réservées aux Vendeurs et Administrateurs

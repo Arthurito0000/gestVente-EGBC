@@ -8,12 +8,28 @@ use Illuminate\Http\Request;
 
 class CategoryController extends Controller
 {
-    public function index()
+    public function index(Request $request)
 {
-    $categories = Category::oldest('id')->paginate(10);
+    $search = $request->get('search');
+    
+    $categories = Category::when($search, function ($query, $search) {
+            return $query->where('name', 'like', "%{$search}%")
+                       ->orWhere('description', 'like', "%{$search}%")
+                       ->orWhere('code', 'like', "%{$search}%");
+        })
+        ->oldest('id')
+        ->paginate(10);
+    
+    // Conserver les paramètres de recherche dans la pagination
+    $categories->appends($request->query());
+
+    if ($request->ajax()) {
+        return view('categories.partials.table', compact('categories'))->render();
+    }
 
     return view('categories.index', [
         'categories' => $categories,
+        'search' => $search,
         'page' => 'Gestions des catégories',
     ]);
 }

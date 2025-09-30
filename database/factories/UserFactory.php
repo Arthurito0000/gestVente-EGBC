@@ -29,6 +29,7 @@ class UserFactory extends Factory
             'email_verified_at' => now(),
             'password' => static::$password ??= Hash::make('password'),
             'remember_token' => Str::random(10),
+            'statut' => 'actif',
         ];
     }
 
@@ -70,5 +71,23 @@ class UserFactory extends Factory
         return $this->state(fn (array $attributes) => [
             'name' => $name,
         ]);
+    }
+
+    /**
+     * Créer un utilisateur avec un statut spécifique
+     */
+    public function withStatus(string $statut): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'statut' => $statut,
+        ]);
+    }
+
+    /**
+     * Créer un utilisateur inactif
+     */
+    public function inactive(): static
+    {
+        return $this->withStatus('inactif');
     }
 }

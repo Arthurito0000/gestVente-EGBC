@@ -13,6 +13,12 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withMiddleware(function (Middleware $middleware) {
         $middleware->alias([
             'permission' => \App\Http\Middleware\CheckPermission::class,
+            'user.status' => \App\Http\Middleware\CheckUserStatus::class,
+        ]);
+        
+        // Appliquer le middleware CheckUserStatus à toutes les routes authentifiées
+        $middleware->web(append: [
+            \App\Http\Middleware\CheckUserStatus::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {

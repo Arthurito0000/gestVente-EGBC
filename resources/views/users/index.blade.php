@@ -94,7 +94,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Fonction pour attacher les événements de pagination
     function attachPaginationEvents() {
-        const paginationLinks = document.querySelectorAll('#usersTable .pagination a');
+        const paginationLinks = document.querySelectorAll('#usersTable .pagination-links a, #usersTable .pagination a');
         
         paginationLinks.forEach(link => {
             link.addEventListener('click', function(e) {

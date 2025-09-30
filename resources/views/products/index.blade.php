@@ -22,7 +22,11 @@
           </svg>
         </div>
       </div>
-      <a href="{{ route('products.create') }}" class="bg-primary-600 hover:bg-primary-700 text-white rounded-lg px-4 py-2 whitespace-nowrap">Nouveau produit</a>
+      @can('create-products')
+      <a href="{{ route('products.create') }}" class="bg-blue-600 hover:bg-blue-700 text-white rounded-lg px-4 py-2 whitespace-nowrap">
+        ➕ Nouveau produit
+      </a>
+      @endcan
     </div>
   </div>
 

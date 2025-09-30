@@ -24,6 +24,9 @@ class UserManagementController extends Controller
                            ->orWhere('email', 'like', "%{$search}%");
             })
             ->paginate(10);
+        
+        // Conserver les paramètres de recherche dans la pagination
+        $users->appends($request->query());
 
         if ($request->ajax()) {
             return view('users.partials.table', compact('users'))->render();
@@ -51,12 +54,14 @@ class UserManagementController extends Controller
             'email' => 'required|string|email|max:255|unique:users',
             'password' => 'required|string|min:8|confirmed',
             'role' => 'required|exists:roles,name',
+            'statut' => 'sometimes|in:actif,inactif',
         ]);
 
         $user = User::create([
             'name' => $request->name,
             'email' => $request->email,
             'password' => Hash::make($request->password),
+            'statut' => $request->get('statut', 'actif'), // Par défaut actif
         ]);
 
         $user->assignRole($request->role);
@@ -94,13 +99,23 @@ class UserManagementController extends Controller
             'email' => ['required', 'string', 'email', 'max:255', Rule::unique('users')->ignore($user->id)],
             'password' => 'nullable|string|min:8|confirmed',
             'role' => 'required|exists:roles,name',
+            'statut' => 'sometimes|in:actif,inactif',
         ]);
 
-        $user->update([
+        $updateData = [
             'name' => $request->name,
             'email' => $request->email,
-            'password' => $request->password ? Hash::make($request->password) : $user->password,
-        ]);
+        ];
+        
+        if ($request->password) {
+            $updateData['password'] = Hash::make($request->password);
+        }
+        
+        if ($request->has('statut')) {
+            $updateData['statut'] = $request->statut;
+        }
+        
+        $user->update($updateData);
 
         // Synchroniser le rôle
         $user->syncRoles([$request->role]);
@@ -160,12 +175,27 @@ class UserManagementController extends Controller
      */
     public function toggleStatus(User $user)
     {
-        // Cette fonctionnalité nécessiterait un champ 'active' dans la table users
-        // Pour l'instant, on peut juste retourner une réponse
-        return response()->json([
-            'success' => true,
-            'message' => 'Fonctionnalité à implémenter : changement de statut utilisateur'
-        ]);
+        // Empêcher la modification de son propre statut
+        if ($user->id === auth()->id()) {
+            return redirect()->route('users.index')
+                ->with('error', 'Vous ne pouvez pas modifier votre propre statut !');
+        }
+
+        // Seuls les administrateurs peuvent modifier le statut
+        if (!auth()->user()->can('manage-users')) {
+            return redirect()->route('users.index')
+                ->with('error', 'Vous n\'avez pas l\'autorisation de modifier le statut des utilisateurs.');
+        }
+
+        $nouveauStatut = $user->statut === 'actif' ? 'inactif' : 'actif';
+        $user->update(['statut' => $nouveauStatut]);
+
+        $message = $nouveauStatut === 'actif' 
+            ? "L'utilisateur {$user->name} a été activé avec succès !"
+            : "L'utilisateur {$user->name} a été désactivé avec succès !";
+
+        return redirect()->route('users.index')
+            ->with('success', $message);
     }
 
     /**

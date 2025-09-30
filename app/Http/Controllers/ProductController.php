@@ -7,6 +7,7 @@ use App\Models\Category;
 use App\Models\Stock;
 use App\Models\Movement;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class ProductController extends Controller
 {
@@ -62,32 +63,43 @@ class ProductController extends Controller
             'nom' => 'required|string|max:255',
             'prix_achat' => 'required|numeric|min:0',
             'prix_vente' => 'required|numeric|min:0',
-            'categorie' => 'nullable|string|exists:categories,name',
+            'categorie' => 'nullable|string|max:255',
             'quantite' => 'required|integer|min:0',
             'seuil_stock' => 'required|integer|min:0'
         ]);
 
-        // Créer le produit
-        $product = Product::create($request->except('quantite'));
+        try {
+            DB::transaction(function () use ($request) {
+                // Créer le produit (sans quantite et seuil_stock)
+                $product = Product::create($request->except(['quantite', 'seuil_stock']));
 
-        // Créer le stock avec la quantité initiale
-        Stock::create([
-            'product_id' => $product->id,
-            'quantite' => $request->quantite,
-            'seuil' => $request->seuil_stock
-        ]);
+                // Créer le stock avec la quantité initiale
+                Stock::create([
+                    'product_id' => $product->id,
+                    'quantite' => $request->quantite,
+                    'seuil' => $request->seuil_stock
+                ]);
 
-        // Créer le mouvement de stock initial
-        Movement::create([
-            'product_id' => $product->id,
-            'type' => 'ENTREE',
-            'quantite' => $request->quantite,
-            'motif' => 'Stock initial',
-            'date' => now()
-        ]);
+                // Créer le mouvement de stock initial si quantité > 0
+                if ($request->quantite > 0) {
+                    Movement::create([
+                        'product_id' => $product->id,
+                        'type' => 'ENTREE',
+                        'quantite' => $request->quantite,
+                        'motif' => 'Stock initial',
+                        'date' => now()
+                    ]);
+                }
+            });
 
-        return redirect()->route('products.index')
-            ->with('success', 'Produit créé avec succès.');
+            return redirect()->route('products.index')
+                ->with('success', '✅ Produit créé avec succès !');
+                
+        } catch (\Exception $e) {
+            return redirect()->back()
+                ->withInput()
+                ->with('error', '❌ Erreur lors de la création du produit : ' . $e->getMessage());
+        }
     }
 
     /**

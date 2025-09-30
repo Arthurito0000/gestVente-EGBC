@@ -1,4 +1,5 @@
 @extends('layouts.app')
+@section('title', 'Gestions des categories')
 
 @section('content')
     <div class="space-y-6">
@@ -10,8 +11,12 @@
             <div class="flex items-center gap-3">
                 <input type="text" placeholder="Rechercher…"
                     class="hidden md:block rounded-lg border-gray-300 focus:ring-primary-600 focus:border-primary-600" />
+                @can('manage-categories')
                 <button id="openCategoryModal"
-                    class="bg-primary-600 hover:bg-primary-700 text-white rounded-lg px-4 py-2">Ajouter catégorie</button>
+                    class="bg-blue-600 hover:bg-blue-700 text-white rounded-lg px-4 py-2">
+                    ➕ Ajouter catégorie
+                </button>
+                @endcan
             </div>
         </div>
 
@@ -42,50 +47,91 @@
                 @csrf
                 <div>
                   <label class="block text-sm font-medium text-gray-700 mb-2">Nom</label>
-                  <input name="name" type="text" class="w-full rounded-lg border border-gray-300 bg-gray-50 hover:bg-white focus:bg-white focus:ring-2 focus:ring-primary-600 focus:border-primary-600 transition-colors px-3 py-3" placeholder="Nom de la catégorie" required />
+                  <input name="name" type="text" class="w-full rounded-lg border border-gray-300 bg-gray-50 hover:bg-white focus:bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors px-3 py-3" placeholder="Nom de la catégorie" required />
                 </div>
                 <div>
                   <label class="block text-sm font-medium text-gray-700 mb-2">Description</label>
-                  <textarea name="description" rows="4" class="w-full rounded-lg border border-gray-300 bg-gray-50 hover:bg-white focus:bg-white focus:ring-2 focus:ring-primary-600 focus:border-primary-600 transition-colors px-3 py-3" placeholder="Description de la catégorie"></textarea>
+                  <textarea name="description" rows="4" class="w-full rounded-lg border border-gray-300 bg-gray-50 hover:bg-white focus:bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors px-3 py-3" placeholder="Description de la catégorie"></textarea>
                 </div>
                 <div class="flex items-center justify-end gap-3 pt-2">
                   <button type="button" id="cancelCategoryModal" class="px-4 py-2 rounded-lg border">Annuler</button>
-                  <button type="submit" class="bg-primary-600 hover:bg-primary-700 text-white rounded-lg px-5 py-2.5">Enregistrer</button>
+                  <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white rounded-lg px-5 py-2.5">✅ Enregistrer</button>
                 </div>
               </form>
             </div>
           </div>
         </div>
         <script>
-          (function(){
+          document.addEventListener('DOMContentLoaded', function(){
             const openBtn = document.getElementById('openCategoryModal');
             const modal = document.getElementById('categoryModal');
             const closeBtn = document.getElementById('closeCategoryModal');
             const cancelBtn = document.getElementById('cancelCategoryModal');
             const form = document.getElementById('categoryForm');
+            const backdrop = modal.querySelector('.absolute.inset-0');
 
-            function openModal(){ modal.classList.remove('hidden'); document.body.classList.add('overflow-hidden'); }
-            function closeModal(){ modal.classList.add('hidden'); document.body.classList.remove('overflow-hidden'); }
+            function openModal(){ 
+                modal.classList.remove('hidden'); 
+                document.body.classList.add('overflow-hidden'); 
+            }
+            
+            function closeModal(){ 
+                modal.classList.add('hidden'); 
+                document.body.classList.remove('overflow-hidden'); 
+                form.reset();
+            }
 
-            openBtn?.addEventListener('click', openModal);
-            closeBtn?.addEventListener('click', closeModal);
-            cancelBtn?.addEventListener('click', closeModal);
-            modal.addEventListener('click', (e)=>{ if(e.target === modal.querySelector('.absolute.inset-0')) closeModal(); });
+            // Event listeners
+            if (openBtn) {
+                openBtn.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    openModal();
+                });
+            }
+            
+            if (closeBtn) {
+                closeBtn.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    closeModal();
+                });
+            }
+            
+            if (cancelBtn) {
+                cancelBtn.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    closeModal();
+                });
+            }
 
-            form?.addEventListener('submit', async (e)=>{
-              e.preventDefault();
-              // Simulate AJAX submit
-              const submitBtn = form.querySelector('button[type="submit"]');
-              const original = submitBtn.textContent;
-              submitBtn.textContent = 'Enregistrement…';
-              submitBtn.disabled = true;
-              await new Promise(r=>setTimeout(r,600));
-              submitBtn.disabled = false; submitBtn.textContent = original;
-              form.submit();
-              form.reset();
-              closeModal();
+            // Fermer en cliquant sur le backdrop
+            if (backdrop) {
+                backdrop.addEventListener('click', function(e) {
+                    if (e.target === backdrop) {
+                        closeModal();
+                    }
+                });
+            }
+
+            // Fermer avec Escape
+            document.addEventListener('keydown', function(e) {
+                if (e.key === 'Escape' && !modal.classList.contains('hidden')) {
+                    closeModal();
+                }
             });
-          })();
+
+            // Gestion du formulaire
+            if (form) {
+                form.addEventListener('submit', function(e) {
+                    const submitBtn = form.querySelector('button[type="submit"]');
+                    const original = submitBtn.textContent;
+                    submitBtn.textContent = '⏳ Enregistrement…';
+                    submitBtn.disabled = true;
+                    
+                    // Le formulaire se soumet normalement
+                    // La page se rechargera avec le message de succès
+                });
+            }
+          });
         </script>
     </div>
 @endsection

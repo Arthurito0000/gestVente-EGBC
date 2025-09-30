@@ -4,9 +4,12 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>{{ $title ?? 'Stock Manager' }}</title>
     <!-- TailwindCSS via CDN for guaranteed styling -->
     <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Alpine.js pour les interactions -->
+    <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
     <script>
         tailwind.config = {
             theme: {
@@ -82,6 +85,35 @@
         #sidebar nav a {
             transition: padding 200ms, gap 200ms;
         }
+        
+        /* SOLUTION DEFINITIVE - Menu utilisateur au-dessus de TOUT */
+        .user-dropdown {
+            z-index: 99999 !important;
+            position: relative !important;
+        }
+        
+        .dropdown-menu {
+            z-index: 99999 !important;
+            position: absolute !important;
+        }
+        
+        /* Forcer TOUS les champs de recherche à rester en bas */
+        .relative:has(input[type="text"]) {
+            z-index: -1 !important;
+        }
+        
+        .relative input[type="text"] {
+            z-index: -1 !important;
+        }
+        
+        .relative .absolute {
+            z-index: -1 !important;
+        }
+        
+        /* Forcer spécifiquement les pages produits et stock */
+        .space-y-6 .relative {
+            z-index: -1 !important;
+        }
     </style>
 </head>
 
@@ -103,6 +135,9 @@
             <!-- Nav -->
             <nav class="flex-1 overflow-y-auto px-3 py-4">
                 <ul class="space-y-1">
+                    <!-- Dashboard - Accessible à tous les utilisateurs connectés -->
+                    @auth
+                    @can('view-dashboard')
                     <li>
                         <a href="{{ route('dashboard') }}"
                             class="group flex items-center gap-x-3 px-3 py-2 rounded-lg hover:bg-white/10 {{ request()->routeIs('dashboard') ? 'bg-white/10' : '' }}">
@@ -114,9 +149,15 @@
                             <span class="truncate nav-label">Dashboard</span>
                         </a>
                     </li>
+                    @endcan
+
+                    <!-- Section Inventaire -->
+                    @if(auth()->user()->can('view-products') || auth()->user()->can('view-stock') || auth()->user()->can('view-movements') || auth()->user()->can('manage-categories'))
                     <li>
                         <div class="text-xs uppercase tracking-wider text-white/70 px-3 pt-4 pb-1 section-label">
                             Inventaire</div>
+                        
+                        @can('manage-categories')
                         <a href="{{ route('categories.index') }}"
                             class="group flex items-center gap-x-3 px-3 py-2 rounded-lg hover:bg-white/10 {{ request()->routeIs('categories.*') ? 'bg-white/10' : '' }}">
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -125,6 +166,9 @@
                             </svg>
                             <span class="truncate nav-label">Catégories</span>
                         </a>
+                        @endcan
+
+                        @can('view-products')
                         <a href="{{ route('products.index') }}"
                             class="group flex items-center gap-x-3 px-3 py-2 rounded-lg hover:bg-white/10 {{ request()->routeIs('products.*') ? 'bg-white/10' : '' }}">
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -133,6 +177,9 @@
                             </svg>
                             <span class="truncate nav-label">Produits</span>
                         </a>
+                        @endcan
+
+                        @can('view-stock')
                         <a href="{{ route('stock.index') }}"
                             class="group flex items-center gap-x-3 px-3 py-2 rounded-lg hover:bg-white/10 {{ request()->routeIs('stock.*') ? 'bg-white/10' : '' }}">
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -141,6 +188,9 @@
                             </svg>
                             <span class="truncate nav-label">Stock</span>
                         </a>
+                        @endcan
+
+                        @can('view-movements')
                         <a href="{{ route('movements.index') }}"
                             class="group flex items-center gap-x-3 px-3 py-2 rounded-lg hover:bg-white/10 {{ request()->routeIs('movements.*') ? 'bg-white/10' : '' }}">
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -149,7 +199,12 @@
                             </svg>
                             <span class="truncate nav-label">Mouvements</span>
                         </a>
+                        @endcan
                     </li>
+                    @endif
+
+                    <!-- Section Ventes -->
+                    @can('view-sales')
                     <li>
                         <div class="text-xs uppercase tracking-wider text-white/70 px-3 pt-4 pb-1 section-label">Ventes
                         </div>
@@ -162,9 +217,15 @@
                             <span class="truncate nav-label">Factures</span>
                         </a>
                     </li>
+                    @endcan
+
+                    <!-- Section Administration -->
+                    @if(auth()->user()->can('manage-users') || auth()->user()->can('manage-roles') || auth()->user()->can('manage-permissions'))
                     <li>
                         <div class="text-xs uppercase tracking-wider text-white/70 px-3 pt-4 pb-1 section-label">
                             Administration</div>
+                        
+                        @can('manage-users')
                         <a href="{{ route('users.index') }}"
                             class="group flex items-center gap-x-3 px-3 py-2 rounded-lg hover:bg-white/10 {{ request()->routeIs('users.*') ? 'bg-white/10' : '' }}">
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -173,23 +234,21 @@
                             </svg>
                             <span class="truncate nav-label">Utilisateurs</span>
                         </a>
-                        <a href="{{ route('roles.index') }}"
-                            class="group flex items-center gap-x-3 px-3 py-2 rounded-lg hover:bg-white/10 {{ request()->routeIs('roles.*') ? 'bg-white/10' : '' }}">
+                        @endcan
+
+                        @can('manage-roles')
+                        <a href="{{ route('users.roles') }}"
+                            class="group flex items-center gap-x-3 px-3 py-2 rounded-lg hover:bg-white/10 {{ request()->routeIs('users.roles*') ? 'bg-white/10' : '' }}">
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
                                     d="M5.121 17.804A13.937 13.937 0 0112 15c2.5 0 4.847.655 6.879 1.804M15 10a3 3 0 11-6 0 3 3 0 016 0z" />
                             </svg>
-                            <span class="truncate nav-label">Rôles</span>
+                            <span class="truncate nav-label">Rôles & Permissions</span>
                         </a>
-                        <a href="{{ route('permissions.index') }}"
-                            class="group flex items-center gap-x-3 px-3 py-2 rounded-lg hover:bg-white/10 {{ request()->routeIs('permissions.*') ? 'bg-white/10' : '' }}">
-                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
-                                    d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                            </svg>
-                            <span class="truncate nav-label">Permissions</span>
-                        </a>
+                        @endcan
                     </li>
+                    @endif
+                    @endauth
                 </ul>
             </nav>
             <div class="p-3 border-t border-white/10">
@@ -218,18 +277,144 @@
                                 d="M4 6h16M4 12h16M4 18h16" />
                         </svg>
                     </button>
-                    <h1 class="font-heading text-lg text-gray-900">{{ $page ?? 'Dashboard' }}</h1>
+                    <h1 class="font-heading text-lg text-gray-900">{{ $page ?? 'Dashboards' }}</h1>
                 </div>
                 <div class="flex items-center gap-3">
+                    <!-- Icône de notification (seulement si l'utilisateur peut recevoir des alertes) -->
+                    @auth
+                    @can('receive-stock-alerts')
+                    <div class="relative">
+                        <button id="notificationBtn" class="p-2 rounded-lg hover:bg-gray-100 transition-colors relative" title="Notifications">
+                            <svg class="w-6 h-6 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"></path>
+                            </svg>
+                            <!-- Badge de notification -->
+                            <span id="notificationBadge" class="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center hidden">0</span>
+                        </button>
+                    </div>
+                    @endcan
+                    
                     <div class="hidden md:flex items-center gap-2 px-3 py-1.5 rounded-full border">
                         <span class="w-2 h-2 rounded-full bg-green-500"></span>
                         <span class="text-sm">Online</span>
                     </div>
-                    <div
-                        class="w-9 h-9 rounded-full bg-primary-600 text-white flex items-center justify-center font-heading">
-                        SM</div>
+
+                    <!-- Menu utilisateur -->
+                    <div class="relative user-dropdown" x-data="{ open: false }" style="z-index: 99999 !important; position: relative !important;">
+                        <button @click="open = !open" class="flex items-center gap-2 p-2 rounded-lg hover:bg-gray-100 transition-colors">
+                            <div class="w-9 h-9 rounded-full bg-primary-600 text-white flex items-center justify-center font-heading text-sm">
+                                {{ strtoupper(substr(auth()->user()->name, 0, 2)) }}
+                            </div>
+                            <div class="hidden md:block text-left">
+                                <div class="text-sm font-medium text-gray-900">{{ auth()->user()->name }}</div>
+                                <div class="text-xs text-gray-500">{{ auth()->user()->getFormattedRoleName() }}</div>
+                            </div>
+                            <svg class="w-4 h-4 text-gray-400" :class="{'rotate-180': open}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                            </svg>
+                        </button>
+
+                        <!-- Menu déroulant -->
+                        <div x-show="open" @click.away="open = false" x-transition class="dropdown-menu absolute right-0 mt-2 w-64 bg-white rounded-lg shadow-lg border py-2" style="z-index: 99999 !important; position: absolute !important;">
+                            <div class="px-4 py-3 border-b">
+                                <div class="flex items-center gap-3">
+                                    <div class="w-10 h-10 rounded-full bg-primary-600 text-white flex items-center justify-center font-heading">
+                                        {{ strtoupper(substr(auth()->user()->name, 0, 2)) }}
+                                    </div>
+                                    <div>
+                                        <div class="font-medium text-gray-900">{{ auth()->user()->name }}</div>
+                                        <div class="text-sm text-gray-500">{{ auth()->user()->email }}</div>
+                                        <div class="text-xs text-primary-600 font-medium">{{ auth()->user()->getFormattedRoleName() }}</div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="py-2">
+                                @can('manage-users')
+                                <a href="{{ route('users.show', auth()->user()) }}" class="flex items-center gap-3 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
+                                    </svg>
+                                    Mon profil
+                                </a>
+                                @endcan
+                                
+                                {{-- Paramètres temporairement masqué - fonctionnalité non implémentée
+                                <a href="#" class="flex items-center gap-3 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path>
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                                    </svg>
+                                    Paramètres
+                                </a>
+                                --}}
+                                
+                                <div class="border-t my-2"></div>
+                                
+                                <form method="POST" action="{{ route('logout') }}">
+                                    @csrf
+                                    <button type="submit" class="flex items-center gap-3 px-4 py-2 text-sm text-red-600 hover:bg-red-50 w-full text-left">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path>
+                                        </svg>
+                                        Se déconnecter
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                    @endauth
                 </div>
             </header>
+
+            <!-- Modal de notifications -->
+            <div id="notificationModal" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden">
+                <div class="flex items-start justify-center min-h-screen pt-16 px-4">
+                    <div class="bg-white rounded-2xl shadow-xl max-w-2xl w-full max-h-[80vh] overflow-hidden">
+                        <!-- En-tête du modal -->
+                        <div class="flex items-center justify-between p-6 border-b">
+                            <div class="flex items-center gap-3">
+                                <div class="p-2 bg-red-100 rounded-lg">
+                                    <svg class="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"></path>
+                                    </svg>
+                                </div>
+                                <div>
+                                    <h3 class="text-lg font-semibold text-gray-900">Alertes de Stock</h3>
+                                    <p class="text-sm text-gray-500">Produits nécessitant votre attention</p>
+                                </div>
+                            </div>
+                            <button id="closeNotificationModal" class="p-2 hover:bg-gray-100 rounded-lg transition-colors">
+                                <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                                </svg>
+                            </button>
+                        </div>
+                        
+                        <!-- Contenu du modal -->
+                        <div class="p-6 overflow-y-auto max-h-96">
+                            <div id="notificationContent">
+                                <!-- Le contenu sera chargé dynamiquement -->
+                                <div class="flex items-center justify-center py-8">
+                                    <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600"></div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Pied du modal -->
+                        <div class="px-6 py-4 bg-gray-50 border-t">
+                            <div class="flex items-center justify-between">
+                                <p class="text-sm text-gray-500">
+                                    Dernière mise à jour : <span id="lastUpdateTime">-</span>
+                                </p>
+                                <button id="refreshNotifications" class="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors">
+                                    Actualiser
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
 
             <main class="p-6">
                 @yield('content')
@@ -286,10 +471,160 @@
             toastr.warning('{{ session('warning') }}');
         @endif
 
-        @if (session('info'))
-            toastr.info('{{ session('info') }}');
-        @endif
-    </script>
+    @if(session('info'))
+      toastr.info('{{ session('info') }}');
+    @endif
+
+    // Système de notifications
+    document.addEventListener('DOMContentLoaded', function() {
+        const notificationBtn = document.getElementById('notificationBtn');
+        const notificationModal = document.getElementById('notificationModal');
+        const closeNotificationModal = document.getElementById('closeNotificationModal');
+        const refreshNotifications = document.getElementById('refreshNotifications');
+        const notificationBadge = document.getElementById('notificationBadge');
+        const notificationContent = document.getElementById('notificationContent');
+        const lastUpdateTime = document.getElementById('lastUpdateTime');
+
+        // Charger le nombre de notifications au démarrage
+        loadNotificationCount();
+
+        // Actualiser le nombre de notifications toutes les 30 secondes
+        setInterval(loadNotificationCount, 30000);
+
+        // Événements
+        notificationBtn.addEventListener('click', openNotificationModal);
+        closeNotificationModal.addEventListener('click', closeModal);
+        refreshNotifications.addEventListener('click', loadNotifications);
+        
+        // Fermer le modal en cliquant à l'extérieur
+        notificationModal.addEventListener('click', function(e) {
+            if (e.target === notificationModal) {
+                closeModal();
+            }
+        });
+
+        function loadNotificationCount() {
+            fetch('{{ route('notifications.count') }}')
+                .then(response => response.json())
+                .then(data => {
+                    updateNotificationBadge(data.count);
+                })
+                .catch(error => {
+                    console.error('Erreur lors du chargement du nombre de notifications:', error);
+                });
+        }
+
+        function updateNotificationBadge(count) {
+            if (count > 0) {
+                notificationBadge.textContent = count > 99 ? '99+' : count;
+                notificationBadge.classList.remove('hidden');
+                notificationBtn.classList.add('animate-pulse');
+            } else {
+                notificationBadge.classList.add('hidden');
+                notificationBtn.classList.remove('animate-pulse');
+            }
+        }
+
+        function openNotificationModal() {
+            notificationModal.classList.remove('hidden');
+            loadNotifications();
+        }
+
+        function closeModal() {
+            notificationModal.classList.add('hidden');
+        }
+
+        function loadNotifications() {
+            // Afficher le spinner
+            notificationContent.innerHTML = `
+                <div class="flex items-center justify-center py-8">
+                    <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600"></div>
+                </div>
+            `;
+
+            fetch('{{ route('notifications.stock') }}')
+                .then(response => response.json())
+                .then(data => {
+                    displayNotifications(data.notifications);
+                    lastUpdateTime.textContent = new Date().toLocaleString('fr-FR');
+                })
+                .catch(error => {
+                    console.error('Erreur lors du chargement des notifications:', error);
+                    notificationContent.innerHTML = `
+                        <div class="text-center py-8">
+                            <div class="text-red-500 mb-2">
+                                <svg class="w-12 h-12 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                </svg>
+                            </div>
+                            <p class="text-gray-500">Erreur lors du chargement des notifications</p>
+                        </div>
+                    `;
+                });
+        }
+
+        function displayNotifications(notifications) {
+            if (notifications.length === 0) {
+                notificationContent.innerHTML = `
+                    <div class="text-center py-8">
+                        <div class="text-green-500 mb-2">
+                            <svg class="w-12 h-12 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                            </svg>
+                        </div>
+                        <h3 class="text-lg font-medium text-gray-900 mb-1">Tout va bien !</h3>
+                        <p class="text-gray-500">Aucune alerte de stock pour le moment</p>
+                    </div>
+                `;
+                return;
+            }
+
+            let html = '<div class="space-y-4">';
+            
+            notifications.forEach(notification => {
+                const priorityColor = notification.priority === 'high' ? 'border-red-200 bg-red-50' : 'border-orange-200 bg-orange-50';
+                const iconColor = notification.priority === 'high' ? 'text-red-600' : 'text-orange-600';
+                
+                html += `
+                    <div class="border ${priorityColor} rounded-lg p-4">
+                        <div class="flex items-start gap-3">
+                            <div class="flex-shrink-0">
+                                <svg class="w-5 h-5 ${iconColor}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"></path>
+                                </svg>
+                            </div>
+                            <div class="flex-1">
+                                <h4 class="font-medium text-gray-900">${notification.details.product_name}</h4>
+                                <p class="text-sm text-gray-600 mt-1">SKU: ${notification.details.sku}</p>
+                                <div class="mt-2 grid grid-cols-2 gap-4 text-sm">
+                                    <div>
+                                        <span class="text-gray-500">Stock actuel:</span>
+                                        <span class="font-medium text-gray-900">${notification.details.stock_actuel}</span>
+                                    </div>
+                                    <div>
+                                        <span class="text-gray-500">Seuil:</span>
+                                        <span class="font-medium text-gray-900">${notification.details.seuil}</span>
+                                    </div>
+                                    <div>
+                                        <span class="text-gray-500">Seuil d'alerte:</span>
+                                        <span class="font-medium text-orange-600">${notification.details.seuil_alerte}</span>
+                                    </div>
+                                    <div>
+                                        <span class="text-gray-500">Niveau:</span>
+                                        <span class="font-medium ${notification.priority === 'high' ? 'text-red-600' : 'text-orange-600'}">${notification.details.pourcentage}%</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+            
+            html += '</div>';
+            notificationContent.innerHTML = html;
+        }
+    });
+  </script>
 </body>
 
 </html>

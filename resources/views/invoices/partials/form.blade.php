@@ -47,8 +47,9 @@
             <div>
                 <label class="block text-sm font-medium text-gray-700 mb-1">Date de facture</label>
                 <input name="invoice_date" type="date"
-                    value="{{ old('invoice_date', isset($invoice->invoice_date) ? \Illuminate\Support\Carbon::parse($invoice->invoice_date)->format('Y-m-d') : '') }}"
+                    value="{{ old('invoice_date', isset($invoice) ? \Illuminate\Support\Carbon::parse($invoice->invoice_date)->format('Y-m-d') : now()->format('Y-m-d')) }}"
                     class="w-full rounded-lg border-gray-300 focus:ring-primary-600 focus:border-primary-600 px-3 py-3" />
+
                 @error('invoice_date')
                     <p class="mt-1 text-xs text-red-600">{{ $message }}</p>
                 @enderror
@@ -75,12 +76,13 @@
             </div>
             <div>
                 <label class="block text-sm font-medium text-gray-700 mb-1">Vendeur</label>
-                <input name="vendor_name" type="text" value="{{ old('vendor_name', $invoice->vendor_name ?? '') }}"
+                <input name="vendor_name" type="text" value="{{ old('vendor_name', $invoice->vendor_name ?? auth()->user()->name) }}"
                     class="w-full rounded-lg border-gray-300 focus:ring-primary-600 focus:border-primary-600 px-3 py-3"
-                    placeholder="Magasin Central" />
+                    placeholder="{{ auth()->user()->name }}" readonly />
                 @error('vendor_name')
                     <p class="mt-1 text-xs text-red-600">{{ $message }}</p>
                 @enderror
+                <p class="mt-1 text-xs text-gray-500">Vendeur connecté automatiquement renseigné</p>
             </div>
 
 
@@ -142,9 +144,13 @@
                                     @enderror
                                 </td>
                                 <td class="px-3 py-2">
-                                    <input name="lines[{{ $i }}][quantity]" type="number" min="1"
-                                        value="{{ $line['quantity'] ?? 1 }}"
-                                        class="w-28 text-right rounded-lg border-gray-300 focus:ring-primary-600 focus:border-primary-600 line-qty px-3 py-2.5" />
+                                    <div class="flex items-center space-x-1">
+                                        <button type="button" class="qty-decrease w-6 h-6 bg-red-500 hover:bg-red-600 text-white rounded text-sm font-bold flex items-center justify-center">−</button>
+                                        <input name="lines[{{ $i }}][quantity]" type="number" min="1"
+                                            value="{{ $line['quantity'] ?? 1 }}"
+                                            class="w-16 text-center rounded-lg border-gray-300 focus:ring-primary-600 focus:border-primary-600 line-qty px-2 py-1.5 text-sm" />
+                                        <button type="button" class="qty-increase w-6 h-6 bg-green-500 hover:bg-green-600 text-white rounded text-sm font-bold flex items-center justify-center">+</button>
+                                    </div>
                                     @error("lines.$i.quantity")
                                         <p class="mt-1 text-xs text-red-600">{{ $message }}</p>
                                     @enderror
@@ -182,10 +188,13 @@
                                     @endforeach
                                 </select>
                             </td>
-                            <td class="px-3
-                                            py-2">
-                                <input name="lines[0][quantity]" type="number" min="1" value="1"
-                                    class="w-28 text-right rounded-lg border-gray-300 focus:ring-primary-600 focus:border-primary-600 line-qty px-3 py-2.5" />
+                            <td class="px-3 py-2">
+                                <div class="flex items-center space-x-1">
+                                    <button type="button" class="qty-decrease w-6 h-6 bg-red-500 hover:bg-red-600 text-white rounded text-sm font-bold flex items-center justify-center">−</button>
+                                    <input name="lines[0][quantity]" type="number" min="1" value="1"
+                                        class="w-16 text-center rounded-lg border-gray-300 focus:ring-primary-600 focus:border-primary-600 line-qty px-2 py-1.5 text-sm" />
+                                    <button type="button" class="qty-increase w-6 h-6 bg-green-500 hover:bg-green-600 text-white rounded text-sm font-bold flex items-center justify-center">+</button>
+                                </div>
                             </td>
                             <td class="px-3 py-2">
                                 <input name="lines[0][unit_price]" type="number" step="0.01" value="0"
@@ -248,10 +257,13 @@
                 @endforeach
             </select>
         </td>
-        <td class="px-3
-                        py-2">
-            <input name="__NAME__[quantity]" type="number" min="1" value="1"
-                class="w-28 text-right rounded-lg border-gray-300 focus:ring-primary-600 focus:border-primary-600 line-qty px-3 py-2.5" />
+        <td class="px-3 py-2">
+            <div class="flex items-center space-x-1">
+                <button type="button" class="qty-decrease w-6 h-6 bg-red-500 hover:bg-red-600 text-white rounded text-sm font-bold flex items-center justify-center">−</button>
+                <input name="__NAME__[quantity]" type="number" min="1" value="1"
+                    class="w-16 text-center rounded-lg border-gray-300 focus:ring-primary-600 focus:border-primary-600 line-qty px-2 py-1.5 text-sm" />
+                <button type="button" class="qty-increase w-6 h-6 bg-green-500 hover:bg-green-600 text-white rounded text-sm font-bold flex items-center justify-center">+</button>
+            </div>
         </td>
         <td class="px-3 py-2">
             <input name="__NAME__[unit_price]" type="number" step="0.01" value="0"
@@ -300,13 +312,38 @@
             const qtyInput = row.querySelector('.line-qty');
             const priceInput = row.querySelector('.line-price');
             const productSelect = row.querySelector('select');
+            const decreaseBtn = row.querySelector('.qty-decrease');
+            const increaseBtn = row.querySelector('.qty-increase');
 
-            // Update total when quantity or price changes
-            [qtyInput, priceInput].forEach(el => {
-                el.addEventListener('input', () => {
+            // Boutons +/- pour la quantité
+            if (decreaseBtn) {
+                decreaseBtn.addEventListener('click', () => {
+                    const currentValue = parseInt(qtyInput.value) || 1;
+                    if (currentValue > 1) {
+                        qtyInput.value = currentValue - 1;
+                        recalcRow(row);
+                        recalcAll();
+                    }
+                });
+            }
+
+            if (increaseBtn) {
+                increaseBtn.addEventListener('click', () => {
+                    const currentValue = parseInt(qtyInput.value) || 0;
+                    qtyInput.value = currentValue + 1;
                     recalcRow(row);
                     recalcAll();
                 });
+            }
+
+            // Update total when quantity or price changes
+            [qtyInput, priceInput].forEach(el => {
+                if (el) {
+                    el.addEventListener('input', () => {
+                        recalcRow(row);
+                        recalcAll();
+                    });
+                }
             });
 
             // When product changes, auto-fill unit price

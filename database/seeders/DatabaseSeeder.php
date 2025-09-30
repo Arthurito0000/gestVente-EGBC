@@ -24,5 +24,11 @@ class DatabaseSeeder extends Seeder
         ]);
 
         Category::factory(10)->create();
+        $this->call([
+            RolePermissionSeeder::class,
+            UserSeeder::class,
+        ]);
+
+        
     }
 }

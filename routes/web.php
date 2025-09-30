@@ -2,6 +2,9 @@
 
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\CategoryController;
+use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\SaleController;
+use App\Http\Controllers\UserManagementController;
 // use App\Http\Controllers\InvoiceController; // duplicate removed
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\InvoiceController;
@@ -28,41 +31,91 @@ Route::post('password/reset', [AuthController::class, 'resetPassword'])->name('p
 Route::middleware('auth')->group(function () {
     
 // Dashboard
-Route::get('/dashboard', function () { return view('dashboard'); })->name('dashboard');
+Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard')->middleware(['auth', 'permission:view-dashboard']);
 
-// Inventory
-Route::get('/products', [App\Http\Controllers\ProductController::class, 'index'])->name('products.index');
-Route::get('/products/create', [App\Http\Controllers\ProductController::class, 'create'])->name('products.create');
-Route::post('/products', [App\Http\Controllers\ProductController::class, 'store'])->name('products.store');
-Route::get('/products/{product}', [App\Http\Controllers\ProductController::class, 'show'])->name('products.show');
-Route::get('/products/{product}/edit', [App\Http\Controllers\ProductController::class, 'edit'])->name('products.edit');
-Route::put('/products/{product}', [App\Http\Controllers\ProductController::class, 'update'])->name('products.update');
-Route::delete('/products/{product}', [App\Http\Controllers\ProductController::class, 'destroy'])->name('products.destroy');
-
-Route::prefix('stock')->name('stock.')->group(function () {
-    Route::get('/', [App\Http\Controllers\StockController::class, 'index'])->name('index');
-    Route::get('/{product}', [App\Http\Controllers\StockController::class, 'show'])->name('stock.show');
+// Inventory - Produits avec permissions
+Route::middleware(['auth'])->group(function () {
+    Route::get('/products', [App\Http\Controllers\ProductController::class, 'index'])->name('products.index')->middleware('permission:view-products');
+    Route::get('/products/create', [App\Http\Controllers\ProductController::class, 'create'])->name('products.create')->middleware('permission:create-products');
 });
 
-Route::prefix('movements')->name('movements.')->group(function () {
-    Route::get('/', [App\Http\Controllers\MovementController::class, 'index'])->name('index');
-    Route::get('/create', [App\Http\Controllers\MovementController::class, 'create'])->name('create');
-    Route::post('/', [App\Http\Controllers\MovementController::class, 'store'])->name('store');
+// Export routes avec permissions
+Route::prefix('export')->name('export.')->middleware(['auth'])->group(function () {
+    // Exports produits
+    Route::get('/products/excel', [App\Http\Controllers\Export\ExportController::class, 'productsExcel'])->name('products.excel')->middleware('permission:export-products');
+    Route::get('/products/pdf', [App\Http\Controllers\Export\ExportController::class, 'productsPdf'])->name('products.pdf')->middleware('permission:export-products');
+    Route::get('/products/preview', [App\Http\Controllers\Export\ExportController::class, 'productsPreview'])->name('products.preview')->middleware('permission:export-products');
+    Route::get('/products/stats', [App\Http\Controllers\Export\ExportController::class, 'productsStats'])->name('products.stats')->middleware('permission:view-products');
+    
+    // Exports stocks
+    Route::get('/stocks/excel', [App\Http\Controllers\Export\ExportController::class, 'stocksExcel'])->name('stocks.excel')->middleware('permission:export-stock');
+    Route::get('/stocks/pdf', [App\Http\Controllers\Export\ExportController::class, 'stocksPdf'])->name('stocks.pdf')->middleware('permission:export-stock');
+    Route::get('/stocks/preview', [App\Http\Controllers\Export\ExportController::class, 'stocksPreview'])->name('stocks.preview')->middleware('permission:export-stock');
+    Route::get('/stocks/view', [App\Http\Controllers\Export\ExportController::class, 'stocksView'])->name('stocks.view')->middleware('permission:export-stock');
+    Route::get('/stocks/test', [App\Http\Controllers\Export\ExportController::class, 'stocksTest'])->name('stocks.test');
+    Route::get('/stocks/stats', [App\Http\Controllers\Export\ExportController::class, 'stocksStats'])->name('stocks.stats')->middleware('permission:view-stock');
+    Route::get('/stocks/inventaire', [App\Http\Controllers\Export\ExportController::class, 'stocksInventaire'])->name('stocks.inventaire')->middleware('permission:export-stock');
+    Route::get('/stocks/inventaire/preview', [App\Http\Controllers\Export\ExportController::class, 'stocksInventairePreview'])->name('stocks.inventaire.preview')->middleware('permission:export-stock');
+    
+    // Exports mouvements
+    Route::get('/movements/excel', [App\Http\Controllers\Export\ExportController::class, 'movementsExcel'])->name('movements.excel')->middleware('permission:export-reports');
+    Route::get('/movements/pdf', [App\Http\Controllers\Export\ExportController::class, 'movementsPdf'])->name('movements.pdf')->middleware('permission:export-reports');
+});
+
+
+// Routes de compatibilité (anciennes URLs)
+Route::get('/products/export/excel', [App\Http\Controllers\Export\ExportController::class, 'productsExcel'])->name('products.export.excel');
+Route::get('/products/export/pdf', [App\Http\Controllers\Export\ExportController::class, 'productsPdf'])->name('products.export.pdf');
+
+// Routes produits avec permissions détaillées
+Route::middleware(['auth'])->group(function () {
+    Route::post('/products', [App\Http\Controllers\ProductController::class, 'store'])->name('products.store')->middleware('permission:create-products');
+    Route::get('/products/{product}', [App\Http\Controllers\ProductController::class, 'show'])->name('products.show')->middleware('permission:view-products');
+    Route::get('/products/{product}/edit', [App\Http\Controllers\ProductController::class, 'edit'])->name('products.edit')->middleware('permission:edit-products');
+    Route::put('/products/{product}', [App\Http\Controllers\ProductController::class, 'update'])->name('products.update')->middleware('permission:edit-products');
+    Route::delete('/products/{product}', [App\Http\Controllers\ProductController::class, 'destroy'])->name('products.destroy')->middleware('permission:delete-products');
+});
+
+// Routes stock avec permissions
+Route::prefix('stock')->name('stock.')->middleware(['auth'])->group(function () {
+    Route::get('/', [App\Http\Controllers\StockController::class, 'index'])->name('index')->middleware('permission:view-stock');
+    Route::get('/{product}', [App\Http\Controllers\StockController::class, 'show'])->name('stock.show')->middleware('permission:view-stock');
+    Route::delete('/{stock}', [App\Http\Controllers\StockController::class, 'destroy'])->name('destroy')->middleware('permission:manage-stock');
+});
+
+// Routes mouvements avec permissions
+Route::prefix('movements')->name('movements.')->middleware(['auth'])->group(function () {
+    Route::get('/', [App\Http\Controllers\MovementController::class, 'index'])->name('index')->middleware('permission:view-movements');
+    Route::get('/create', [App\Http\Controllers\MovementController::class, 'create'])->name('create')->middleware('permission:create-movements');
+    Route::post('/', [App\Http\Controllers\MovementController::class, 'store'])->name('store')->middleware('permission:create-movements');
+});
+
+// Notifications avec permissions
+Route::prefix('notifications')->name('notifications.')->middleware(['auth'])->group(function () {
+    Route::get('/stock', [App\Http\Controllers\NotificationController::class, 'getStockNotifications'])->name('stock')->middleware('permission:receive-stock-alerts');
+    Route::get('/count', [App\Http\Controllers\NotificationController::class, 'getNotificationCount'])->name('count')->middleware('permission:receive-stock-alerts');
+    Route::get('/stats', [App\Http\Controllers\NotificationController::class, 'getNotificationStats'])->name('stats')->middleware('permission:receive-stock-alerts');
+    Route::post('/mark-read', [App\Http\Controllers\NotificationController::class, 'markAsRead'])->name('mark-read')->middleware('permission:receive-stock-alerts');
 });
 
 // Sales
 
-// Administration
-Route::prefix('users')->name('users.')->group(function () {
-    Route::get('/', fn() => view('users.index'))->name('index');
-});
-
-Route::prefix('roles')->name('roles.')->group(function () {
-    Route::get('/', fn() => view('roles.index'))->name('index');
-});
-
-Route::prefix('permissions')->name('permissions.')->group(function () {
-    Route::get('/', fn() => view('permissions.index'))->name('index');
+// Administration - Gestion des utilisateurs et rôles
+Route::middleware(['auth'])->group(function () {
+    // Routes pour la gestion des utilisateurs (avec permissions détaillées)
+    Route::get('/users', [UserManagementController::class, 'index'])->name('users.index')->middleware('permission:manage-users');
+    Route::get('/users/create', [UserManagementController::class, 'create'])->name('users.create')->middleware('permission:manage-users');
+    Route::post('/users', [UserManagementController::class, 'store'])->name('users.store')->middleware('permission:manage-users');
+    Route::get('/users/{user}', [UserManagementController::class, 'show'])->name('users.show')->middleware('permission:manage-users');
+    Route::get('/users/{user}/edit', [UserManagementController::class, 'edit'])->name('users.edit')->middleware('permission:manage-users');
+    Route::put('/users/{user}', [UserManagementController::class, 'update'])->name('users.update')->middleware('permission:manage-users');
+    Route::delete('/users/{user}', [UserManagementController::class, 'destroy'])->name('users.destroy')->middleware('permission:manage-users');
+    
+    // Routes spéciales pour les rôles et permissions
+    Route::get('/users/roles/management', [UserManagementController::class, 'roles'])->name('users.roles')->middleware('permission:manage-roles');
+    Route::get('/users/roles/{role}/permissions', [UserManagementController::class, 'getRolePermissions'])->name('users.roles.permissions')->middleware('permission:manage-permissions');
+    Route::put('/users/roles/{role}/permissions', [UserManagementController::class, 'updateRolePermissions'])->name('users.roles.update')->middleware('permission:manage-permissions');
+    Route::patch('/users/{user}/toggle-status', [UserManagementController::class, 'toggleStatus'])->name('users.toggle-status')->middleware('permission:manage-users');
 });
 
 //Categories
@@ -71,8 +124,25 @@ Route::prefix('categories')->name('categories.')->group(function () {
     Route::post('/', [CategoryController::class, 'store'])->name('store');
 });
 
-// Invoices
-Route::resource('invoices', InvoiceController::class);
-Route::get('invoices/{invoice}/download', [InvoiceController::class, 'download'])->name('invoices.download');
+// Sales - Gestion des ventes avec vérification de stock
+Route::middleware(['auth'])->group(function () {
+    Route::get('sales', [SaleController::class, 'index'])->name('sales.index')->middleware('permission:view-sales');
+    Route::get('sales/create', [SaleController::class, 'create'])->name('sales.create')->middleware('permission:create-sales');
+    Route::post('sales', [SaleController::class, 'store'])->name('sales.store')->middleware('permission:create-sales');
+    Route::get('sales/{sale}', [SaleController::class, 'show'])->name('sales.show')->middleware('permission:view-sales');
+    Route::get('sales/{sale}/edit', [SaleController::class, 'edit'])->name('sales.edit')->middleware('permission:edit-sales');
+    Route::put('sales/{sale}', [SaleController::class, 'update'])->name('sales.update')->middleware('permission:edit-sales');
+    Route::delete('sales/{sale}', [SaleController::class, 'destroy'])->name('sales.destroy')->middleware('permission:delete-sales');
+    
+    // API pour vérification de stock en temps réel
+    Route::get('api/products/{product}/stock', [SaleController::class, 'checkStock'])->name('api.products.stock');
+});
+
+// Invoices - Réservées aux Vendeurs et Administrateurs
+Route::middleware(['auth'])->group(function () {
+    Route::resource('invoices', InvoiceController::class)->middleware('permission:manage-invoices');
+    Route::get('invoices/{invoice}/print', [InvoiceController::class, 'print'])->name('invoices.print')->middleware('permission:view-sales');
+    Route::get('invoices/{invoice}/download', [InvoiceController::class, 'download'])->name('invoices.download')->middleware('permission:view-sales');
+});
 
 });

@@ -8,8 +8,25 @@
       <p class="text-gray-500">Gérez le catalogue produits (SKU, prix, etc.).</p>
     </div>
     <div class="flex items-center gap-3">
-      <input type="text" placeholder="Rechercher…" class="hidden md:block rounded-lg border border-gray-300 focus:outline-none focus:ring-0 focus:border-blue-500" />
-      <a href="{{ route('products.create') }}" class="bg-primary-600 hover:bg-primary-700 text-white rounded-lg px-4 py-2">Nouveau produit</a>
+      <div class="relative">
+        <input type="text" id="searchInput" placeholder="Rechercher par SKU, nom ou catégorie..." class="w-80 rounded-lg border border-gray-300 focus:outline-none pl-10 pr-4 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500" />
+        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+          <svg class="h-4 w-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+          </svg>
+        </div>
+        <div id="searchSpinner" class="absolute inset-y-0 right-0 pr-3 flex items-center hidden">
+          <svg class="animate-spin h-4 w-4 text-blue-500" fill="none" viewBox="0 0 24 24">
+            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+          </svg>
+        </div>
+      </div>
+      @can('create-products')
+      <a href="{{ route('products.create') }}" class="bg-blue-600 hover:bg-blue-700 text-white rounded-lg px-4 py-2 whitespace-nowrap">
+        ➕ Nouveau produit
+      </a>
+      @endcan
     </div>
   </div>
 
@@ -17,80 +34,30 @@
     <div class="p-4 border-b flex items-center justify-between">
       <div class="text-sm text-gray-600">Liste des produits</div>
       <div class="flex items-center gap-2 text-sm">
-        <button class="px-3 py-1 rounded border">Exporter</button>
+        @can('export-products')
+        <!-- Bouton Export Excel -->
+        <button id="exportExcelBtn" class="flex items-center gap-2 px-3 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors" title="Exporter en Excel">
+          <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+            <path d="M14,2H6A2,2 0 0,0 4,4V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V8L14,2M18,20H6V4H13V9H18V20Z" />
+            <path d="M15.5,13L13.5,17H12L14.5,12.5L12,8H13.5L15.5,12L17.5,8H19L16.5,12.5L19,17H17.5L15.5,13Z" fill="white"/>
+          </svg>
+          Excel
+        </button>
+        
+        <!-- Bouton Export PDF -->
+        <button id="exportPdfBtn" class="flex items-center gap-2 px-3 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors" title="Exporter en PDF">
+          <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+            <path d="M14,2H6A2,2 0 0,0 4,4V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V8L14,2M18,20H6V4H13V9H18V20Z" />
+            <text x="7" y="16" font-family="Arial" font-size="6" fill="white" font-weight="bold">PDF</text>
+          </svg>
+          PDF
+        </button>
+        @endcan
       </div>
     </div>
-    <div class="overflow-x-auto">
-      <table class="min-w-full divide-y divide-gray-200">
-        <thead class="bg-gray-50">
-          <tr>
-            <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">SKU</th>
-            <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Nom</th>
-            <th class="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase">Prix Achat</th>
-            <th class="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase">Catégorie</th>
-            <th class="px-4 py-2"></th>
-          </tr>
-        </thead>
-        <tbody class="divide-y divide-gray-200 bg-white">
-          @forelse($products as $product)
-          <tr class="hover:bg-gray-50">
-            <td class="px-2 py-1 text-sm font-mono text-gray-700">{{ $product->sku }}</td>
-            <td class="px-2 py-1 text-sm text-gray-900">{{ $product->nom }}</td>
-            <td class="px-2 py-1 text-sm text-right text-gray-700">{{ number_format($product->prix_achat, 2, ',', ' ') }} Fcfa</td>
-            <td class="px-2 py-1 text-sm text-right text-gray-700">
-              @if($product->categorie)
-                <span class="px-2 py-1 text-xs rounded-full bg-gray-100 text-gray-700">{{ ucfirst($product->categorie) }}</span>
-              @else
-                <span class="px-2 py-1 text-xs rounded-full bg-gray-50 text-gray-400">Non définie</span>
-              @endif
-            </td>
-            <td class="px-2 py-1 text-sm text-right">
-              <div class="flex items-center justify-end gap-2">
-                <!-- Voir -->
-                <a href="{{ route('products.show', $product) }}" class="p-2 text-primary-700 hover:text-primary-600 hover:bg-primary-50 rounded-lg transition-colors" title="Voir le produit">
-                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
-                  </svg>
-                </a>
-                
-                <!-- Modifier -->
-                <a href="{{ route('products.edit', $product) }}" class="p-2 text-blue-700 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors" title="Modifier le produit">
-                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
-                  </svg>
-                </a>
-                
-                <!-- Supprimer -->
-                <form action="{{ route('products.destroy', $product) }}" method="POST" class="inline delete-form">
-                  @csrf
-                  @method('DELETE')
-                  <button type="button" class="delete-btn p-2 text-red-700 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors" title="Supprimer le produit" data-product-name="{{ $product->nom }}">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
-                    </svg>
-                  </button>
-                </form>
-              </div>
-            </td>
-          </tr>
-          @empty
-          <tr>
-            <td colspan="5" class="px-4 py-8 text-center text-gray-500">
-              Aucun produit trouvé. <a href="{{ route('products.create') }}" class="text-primary-700 hover:text-primary-600">Créer le premier produit</a>
-            </td>
-          </tr>
-          @endforelse
-        </tbody>
-      </table>
+    <div id="tableContainer">
+      @include('products.partials.table', ['products' => $products])
     </div>
-    
-    <!-- Pagination -->
-    @if($products->hasPages())
-      <div class="px-6 py-4 border-t border-gray-200">
-        {{ $products->links() }}
-      </div>
-    @endif
   </div>
 </div>
 
@@ -142,7 +109,149 @@
 </div>
 
 <script>
+// Variables globales pour la recherche (accessibles partout)
+let searchTimeout;
+let currentSearch = '';
+
 document.addEventListener('DOMContentLoaded', function() {
+    const searchInput = document.getElementById('searchInput');
+    const searchSpinner = document.getElementById('searchSpinner');
+    const tableContainer = document.getElementById('tableContainer');
+
+    // Fonction de recherche AJAX
+    function performSearch(query) {
+        currentSearch = query;
+        
+        // Afficher le spinner
+        searchSpinner.classList.remove('hidden');
+        
+        // Construire l'URL avec les paramètres
+        const url = new URL(window.location.href);
+        if (query.trim()) {
+            url.searchParams.set('search', query);
+        } else {
+            url.searchParams.delete('search');
+        }
+        
+        // Requête AJAX
+        fetch(url.toString(), {
+            method: 'GET',
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest',
+                'Accept': 'text/html'
+            }
+        })
+        .then(response => response.text())
+        .then(html => {
+            // Mettre à jour le contenu de la table
+            tableContainer.innerHTML = html;
+            
+            // Réattacher les événements de suppression
+            attachDeleteEvents();
+            
+            // Réattacher les événements de pagination
+            attachPaginationEvents();
+            
+            // Masquer le spinner
+            searchSpinner.classList.add('hidden');
+            
+            // Mettre à jour l'URL sans recharger la page
+            window.history.pushState({}, '', url.toString());
+        })
+        .catch(error => {
+            console.error('Erreur lors de la recherche:', error);
+            searchSpinner.classList.add('hidden');
+        });
+    }
+
+    // Événement de saisie dans le champ de recherche
+    searchInput.addEventListener('input', function() {
+        const query = this.value;
+        
+        // Annuler la recherche précédente
+        clearTimeout(searchTimeout);
+        
+        // Lancer une nouvelle recherche après 300ms
+        searchTimeout = setTimeout(() => {
+            performSearch(query);
+        }, 300);
+    });
+
+    // Fonction pour attacher les événements de pagination
+    function attachPaginationEvents() {
+        const paginationLinks = document.querySelectorAll('#pagination-container a');
+        paginationLinks.forEach(link => {
+            link.addEventListener('click', function(e) {
+                e.preventDefault();
+                
+                const url = new URL(this.href);
+                // Ajouter le terme de recherche actuel
+                if (currentSearch.trim()) {
+                    url.searchParams.set('search', currentSearch);
+                }
+                
+                // Afficher le spinner
+                searchSpinner.classList.remove('hidden');
+                
+                fetch(url.toString(), {
+                    method: 'GET',
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'Accept': 'text/html'
+                    }
+                })
+                .then(response => response.text())
+                .then(html => {
+                    tableContainer.innerHTML = html;
+                    attachDeleteEvents();
+                    attachPaginationEvents();
+                    searchSpinner.classList.add('hidden');
+                    window.history.pushState({}, '', url.toString());
+                })
+                .catch(error => {
+                    console.error('Erreur lors de la pagination:', error);
+                    searchSpinner.classList.add('hidden');
+                });
+            });
+        });
+    }
+
+    // Fonction pour attacher les événements de suppression
+    function attachDeleteEvents() {
+        document.querySelectorAll('.delete-btn').forEach(function(button) {
+            button.addEventListener('click', function() {
+                const productName = this.getAttribute('data-product-name');
+                currentForm = this.closest('.delete-form');
+                
+                // Mettre à jour le contenu du modal
+                productNameSpan.textContent = productName;
+                
+                // Afficher le modal avec animation
+                showModal();
+            });
+        });
+    }
+
+    // Initialiser les événements de pagination au chargement
+    attachPaginationEvents();
+
+    // Attacher les événements d'exportation
+    const exportExcelBtn = document.getElementById('exportExcelBtn');
+    const exportPdfBtn = document.getElementById('exportPdfBtn');
+
+    if (exportExcelBtn) {
+        exportExcelBtn.addEventListener('click', function() {
+            console.log('Bouton Excel cliqué via event listener');
+            exportExcel();
+        });
+    }
+
+    if (exportPdfBtn) {
+        exportPdfBtn.addEventListener('click', function() {
+            console.log('Bouton PDF cliqué via event listener');
+            exportPdf();
+        });
+    }
     const modal = document.getElementById('deleteModal');
     const modalContent = document.getElementById('modalContent');
     const productNameSpan = document.getElementById('productName');
@@ -229,5 +338,44 @@ document.addEventListener('DOMContentLoaded', function() {
         }, 300);
     }
 });
+
+// Fonctions d'exportation
+function exportExcel() {
+    try {
+        console.log('Fonction exportExcel appelée'); // Debug
+        
+        // Récupérer la valeur actuelle du champ de recherche
+        const searchInput = document.getElementById('searchInput');
+        const searchValue = searchInput ? searchInput.value.trim() : '';
+        const searchParam = searchValue ? `?search=${encodeURIComponent(searchValue)}` : '';
+        
+        const url = `{{ route('products.export.excel') }}${searchParam}`;
+        console.log('URL Excel:', url); // Debug
+        
+        window.location.href = url;
+    } catch (error) {
+        console.error('Erreur lors de l\'export Excel:', error);
+        alert('Erreur lors de l\'exportation Excel');
+    }
+}
+
+function exportPdf() {
+    try {
+        console.log('Fonction exportPdf appelée'); // Debug
+        
+        // Récupérer la valeur actuelle du champ de recherche
+        const searchInput = document.getElementById('searchInput');
+        const searchValue = searchInput ? searchInput.value.trim() : '';
+        const searchParam = searchValue ? `?search=${encodeURIComponent(searchValue)}` : '';
+        
+        const url = `{{ route('products.export.pdf') }}${searchParam}`;
+        console.log('URL PDF:', url); // Debug
+        
+        window.open(url, '_blank');
+    } catch (error) {
+        console.error('Erreur lors de l\'export PDF:', error);
+        alert('Erreur lors de l\'exportation PDF');
+    }
+}
 </script>
 @endsection

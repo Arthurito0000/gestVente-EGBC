@@ -9,20 +9,50 @@
         </div>
         <div>
           <label class="block text-sm font-medium text-gray-700 mb-2">Type</label>
-          <div class="flex gap-3">
-            <label class="inline-flex items-center gap-2 px-3 py-2 rounded-lg border cursor-pointer">
-              <input name="type" type="radio" selected name="type" value="ENTREE" class="text-green-600 focus:ring-green-600" checked>
-              <span>ENTREE</span>
+          <div class="flex gap-3 flex-wrap">
+            <label class="inline-flex items-center gap-2 px-3 py-2 rounded-lg border cursor-pointer hover:bg-gray-50">
+              <input name="type" type="radio" value="ENTREE" class="text-green-600 focus:ring-green-600" checked onchange="toggleFields()">
+              <span class="text-green-700">ENTRÉE</span>
             </label>
-            <!-- <label class="inline-flex items-center gap-2 px-3 py-2 rounded-lg border cursor-pointer">
-              <input type="radio" name="type" value="SORTIE" class="text-red-600 focus:ring-red-600">
-              <span>SORTIE</span>
-            </label> -->
+            <label class="inline-flex items-center gap-2 px-3 py-2 rounded-lg border cursor-pointer hover:bg-gray-50">
+              <input type="radio" name="type" value="SORTIE" class="text-red-600 focus:ring-red-600" onchange="toggleFields()">
+              <span class="text-red-700">SORTIE</span>
+            </label>
+            <label class="inline-flex items-center gap-2 px-3 py-2 rounded-lg border cursor-pointer hover:bg-gray-50">
+              <input type="radio" name="type" value="AJUSTEMENT" class="text-blue-600 focus:ring-blue-600" onchange="toggleFields()">
+              <span class="text-blue-700">AJUSTEMENT</span>
+            </label>
           </div>
+        </div>
+
+        <!-- Champ spécifique pour les ajustements -->
+        <div id="ajustement-type" class="hidden">
+          <label class="block text-sm font-medium text-gray-700 mb-2">Type d'ajustement</label>
+          <div class="flex gap-3">
+            <label class="inline-flex items-center gap-2 px-3 py-2 rounded-lg border cursor-pointer hover:bg-gray-50">
+              <input name="ajustement_type" type="radio" value="AUGMENTATIF" class="text-green-600 focus:ring-green-600">
+              <span class="text-green-700">Augmentatif (+)</span>
+            </label>
+            <label class="inline-flex items-center gap-2 px-3 py-2 rounded-lg border cursor-pointer hover:bg-gray-50">
+              <input name="ajustement_type" type="radio" value="DIMINUTIF" class="text-red-600 focus:ring-red-600">
+              <span class="text-red-700">Diminutif (-)</span>
+            </label>
+          </div>
+          <p class="mt-1 text-xs text-gray-500">Précisez si l'ajustement augmente ou diminue le stock</p>
         </div>
         <div>
           <label class="block text-sm font-medium text-gray-700 mb-2">Quantité</label>
-          <input name="quantite" type="number" class="w-full rounded-lg border border-gray-300 bg-gray-50 hover:bg-white focus:bg-white focus:outline-none focus:ring-0 focus:border-blue-500 transition-colors px-3 py-3" placeholder="0"/>
+          <input name="quantite" type="number" class="w-full rounded-lg border border-gray-300 bg-gray-50 hover:bg-white focus:bg-white focus:outline-none focus:ring-0 focus:border-blue-500 transition-colors px-3 py-3" placeholder="0" required/>
+        </div>
+        <div id="prix-achat-field">
+          <label class="block text-sm font-medium text-gray-700 mb-2">Prix d'achat unitaire (optionnel)</label>
+          <div class="relative">
+            <input name="prix_achat" type="number" step="0.01" min="0" class="w-full rounded-lg border border-gray-300 bg-gray-50 hover:bg-white focus:bg-white focus:outline-none focus:ring-0 focus:border-blue-500 transition-colors px-3 py-3 pr-12" placeholder="0.00"/>
+            <div class="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
+              <span class="text-gray-500 text-sm">Fcfa</span>
+            </div>
+          </div>
+          <p class="mt-1 text-xs text-gray-500">Si renseigné, mettra à jour le prix d'achat du produit</p>
         </div>
         <div>
           <label class="block text-sm font-medium text-gray-700 mb-2">Date</label>
@@ -38,3 +68,40 @@
         <a href="{{ route('movements.index') }}" class="px-4 py-2 rounded-lg border">Annuler</a>
         <button class="bg-primary-600 hover:bg-primary-700 text-white rounded-lg px-5 py-2.5">Enregistrer</button>
       </div>
+
+<script>
+function toggleFields() {
+    const typeRadios = document.querySelectorAll('input[name="type"]');
+    const ajustementTypeDiv = document.getElementById('ajustement-type');
+    const prixAchatField = document.getElementById('prix-achat-field');
+    
+    let selectedType = '';
+    typeRadios.forEach(radio => {
+        if (radio.checked) {
+            selectedType = radio.value;
+        }
+    });
+    
+    if (selectedType === 'AJUSTEMENT') {
+        ajustementTypeDiv.classList.remove('hidden');
+        prixAchatField.classList.add('hidden');
+        // Rendre le champ ajustement_type requis
+        document.querySelectorAll('input[name="ajustement_type"]').forEach(input => {
+            input.required = true;
+        });
+    } else {
+        ajustementTypeDiv.classList.add('hidden');
+        prixAchatField.classList.remove('hidden');
+        // Retirer l'obligation du champ ajustement_type
+        document.querySelectorAll('input[name="ajustement_type"]').forEach(input => {
+            input.required = false;
+            input.checked = false;
+        });
+    }
+}
+
+// Initialiser au chargement
+document.addEventListener('DOMContentLoaded', function() {
+    toggleFields();
+});
+</script>

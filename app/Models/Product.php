@@ -20,6 +20,7 @@ class Product extends Model
 
     protected $casts = [
         'prix_achat' => 'decimal:2',
+        'prix_vente' => 'decimal:2',
         'seuil_stock' => 'integer'
     ];
 
@@ -51,7 +52,12 @@ class Product extends Model
     // Accessors
     public function getPrixAchatFormatteAttribute()
     {
-        return number_format((float) $this->prix_achat, 2, ',', ' ') . ' €';
+        return number_format((float) $this->prix_achat, 2, ',', ' ') . ' Fcfa';
+    }
+    
+    public function getPrixVenteFormatteAttribute()
+    {
+        return number_format((float) $this->prix_vente, 2, ',', ' ') . ' Fcfa';
     }
 
     public function invoices()

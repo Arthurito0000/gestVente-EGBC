@@ -18,11 +18,25 @@ class InvoiceController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Request $request)
     {
-        $invoices = Invoice::oldest('id')->paginate(10);
+        $search = $request->get('search');
+        
+        $invoices = Invoice::when($search, function ($query, $search) {
+                return $query->where('client_name', 'like', "%{$search}%")
+                           ->orWhere('code', 'like', "%{$search}%");
+            })
+            ->orderBy('id', 'desc')
+            ->paginate(10);
+        
+        // Conserver les paramètres de recherche dans la pagination
+        $invoices->appends($request->query());
 
-        return view('invoices.index', compact('invoices'));
+        if ($request->ajax()) {
+            return view('invoices.partials.table', compact('invoices'))->render();
+        }
+
+        return view('invoices.index', compact('invoices', 'search'));
     }
 
     /**
@@ -56,16 +70,46 @@ class InvoiceController extends Controller
                 'total_amount'    => $request->total_amount,
             ]);
     
-            // Save products and decrement stock
+            // Save products and update stock safely
             foreach ($request->lines as $line) {
+                // Vérifier le stock avant de créer la ligne de facture
+                $product = Product::with('stock')->lockForUpdate()->findOrFail($line['product_id']);
+                
+                if (!$product->stock) {
+                    throw new \Exception("Aucun stock trouvé pour le produit {$product->nom}");
+                }
+                
+                $stockDisponible = $product->stock->quantite;
+                $quantiteDemandee = $line['quantity'];
+                
+                if ($quantiteDemandee > $stockDisponible) {
+                    throw new \Exception(
+                        "❌ FACTURE REFUSÉE - Stock insuffisant pour {$product->nom} (SKU: {$product->sku}). " .
+                        "Quantité demandée: {$quantiteDemandee}, Stock disponible: {$stockDisponible}"
+                    );
+                }
+                
+                $nouveauStock = $stockDisponible - $quantiteDemandee;
+                
+                if ($nouveauStock < 0) {
+                    throw new \Exception("❌ ERREUR SYSTÈME - Le stock ne peut pas devenir négatif !");
+                }
+                
+                // Créer la ligne de facture
                 $invoice->products()->attach($line['product_id'], [
                     'quantity'    => $line['quantity'],
                     'unit_price'  => $line['unit_price'],
                     'total_price' => $line['total_price'],
                 ]);
     
-                Stock::where('product_id', $line['product_id'])
-                    ->decrement('quantite', $line['quantity']);
+                // Mettre à jour le stock de manière sécurisée
+                $product->stock->update(['quantite' => $nouveauStock]);
+                
+                // Vérification post-mise à jour
+                $product->stock->refresh();
+                if ($product->stock->quantite < 0) {
+                    throw new \Exception("❌ ERREUR CRITIQUE - Le stock est devenu négatif après la mise à jour !");
+                }
             }
     
             DB::commit();
@@ -84,40 +128,8 @@ class InvoiceController extends Controller
             // Load relations
             $invoice->load('products');
     
-            // Render Blade view
-            $html = view('invoices.partials.invoice', compact('invoice'))->render();
-    
-            // Ensure temporary directory exists for mPDF
-            $tempPath = storage_path('app/mpdf-temp');
-            if (!is_dir($tempPath)) {
-                @mkdir($tempPath, 0775, true);
-            }
-    
-            // Configure mPDF
-            $mpdf = new Mpdf([
-                'default_font' => 'dejavusans',
-                'tempDir' => $tempPath,
-            ]);
-    
-            $chunks = str_split($html, 100000); // ou 100000, à ajuster si nécessaire
-            foreach ($chunks as $chunk) {
-                $mpdf->WriteHTML($chunk);
-            }
-
-    
-            // Save to file
-            $invoiceStoragePath = storage_path('app/public/invoices');
-            if (!is_dir($invoiceStoragePath)) {
-                mkdir($invoiceStoragePath, 0775, true);
-            }
-            
-            // Save PDF to file
-            $filename = 'Facture_' . $invoice->invoice_number . '.pdf';
-            $path = $invoiceStoragePath . '/' . $filename;
-            $mpdf->Output($path, \Mpdf\Output\Destination::FILE);
-    
-            // Redirect to index with download link in session
-            return redirect()->route('invoices.index')->with('pdf_download', asset('storage/invoices/' . $filename));
+            // Rediriger vers la page d'impression au lieu de générer un PDF
+            return redirect()->route('invoices.print', $invoice->id)->with('success', 'Facture créée avec succès ! Vous pouvez maintenant l\'imprimer.');
     
         } catch (\Throwable $e) {
             DB::rollBack();
@@ -130,6 +142,15 @@ class InvoiceController extends Controller
     }
     
     
+
+    /**
+     * Afficher la page d'impression de la facture
+     */
+    public function print(string $id)
+    {
+        $invoice = Invoice::with('products')->findOrFail($id);
+        return view('invoices.partials.invoice', compact('invoice'));
+    }
 
     /**
      * Display the specified resource.

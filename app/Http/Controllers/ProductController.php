@@ -7,16 +7,41 @@ use App\Models\Category;
 use App\Models\Stock;
 use App\Models\Movement;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class ProductController extends Controller
 {
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Request $request)
     {
-        $products = Product::latest()->paginate(10);
-        return view('products.index', compact('products'));
+        $query = Product::query();
+
+        // Recherche
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where(function($q) use ($search) {
+                $q->where('sku', 'LIKE', "%{$search}%")
+                  ->orWhere('nom', 'LIKE', "%{$search}%")
+                  ->orWhere('categorie', 'LIKE', "%{$search}%");
+            });
+        }
+
+        $products = $query->latest()->paginate(10);
+        
+        // Conserver les paramètres de recherche dans la pagination
+        $products->appends($request->query());
+
+        // Si c'est une requête AJAX, retourner seulement le contenu de la table
+        if ($request->ajax()) {
+            return view('products.partials.table', compact('products'))->render();
+        }
+
+        return view('products.index', [
+            'products' => $products,
+            'page' => 'Liste des produits',
+        ]);
     }
 
     /**
@@ -25,7 +50,7 @@ class ProductController extends Controller
     public function create()
     {
         $categories = Category::orderBy('name')->get();
-        return view('products.create', compact('categories'));
+        return view('products.create', ['categories'=>$categories,'page'=>'Ajout d\'un produit']);
     }
 
     /**
@@ -38,32 +63,43 @@ class ProductController extends Controller
             'nom' => 'required|string|max:255',
             'prix_achat' => 'required|numeric|min:0',
             'prix_vente' => 'required|numeric|min:0',
-            'categorie' => 'nullable|string|exists:categories,name',
+            'categorie' => 'nullable|string|max:255',
             'quantite' => 'required|integer|min:0',
             'seuil_stock' => 'required|integer|min:0'
         ]);
 
-        // Créer le produit
-        $product = Product::create($request->except('quantite'));
+        try {
+            DB::transaction(function () use ($request) {
+                // Créer le produit (sans quantite et seuil_stock)
+                $product = Product::create($request->except(['quantite', 'seuil_stock']));
 
-        // Créer le stock avec la quantité initiale
-        Stock::create([
-            'product_id' => $product->id,
-            'quantite' => $request->quantite,
-            'seuil' => $request->seuil_stock
-        ]);
+                // Créer le stock avec la quantité initiale
+                Stock::create([
+                    'product_id' => $product->id,
+                    'quantite' => $request->quantite,
+                    'seuil' => $request->seuil_stock
+                ]);
 
-        // Créer le mouvement de stock initial
-        Movement::create([
-            'product_id' => $product->id,
-            'type' => 'ENTREE',
-            'quantite' => $request->quantite,
-            'motif' => 'Stock initial',
-            'date' => now()
-        ]);
+                // Créer le mouvement de stock initial si quantité > 0
+                if ($request->quantite > 0) {
+                    Movement::create([
+                        'product_id' => $product->id,
+                        'type' => 'ENTREE',
+                        'quantite' => $request->quantite,
+                        'motif' => 'Stock initial',
+                        'date' => now()
+                    ]);
+                }
+            });
 
-        return redirect()->route('products.index')
-            ->with('success', 'Produit créé avec succès.');
+            return redirect()->route('products.index')
+                ->with('success', '✅ Produit créé avec succès !');
+                
+        } catch (\Exception $e) {
+            return redirect()->back()
+                ->withInput()
+                ->with('error', '❌ Erreur lors de la création du produit : ' . $e->getMessage());
+        }
     }
 
     /**
@@ -71,7 +107,7 @@ class ProductController extends Controller
      */
     public function show(Product $product)
     {
-        return view('products.show', compact('product'));
+        return view('products.show',['product'=>$product,'page'=>'Détails du produit']);
     }
 
     /**
@@ -80,7 +116,7 @@ class ProductController extends Controller
     public function edit(Product $product)
     {
         $categories = Category::orderBy('name')->get();
-        return view('products.edit', compact('product', 'categories'));
+        return view('products.edit', ['product'=>$product,'categories'=>$categories,'page'=>'Modification du produit']);
     }
 
     /**
@@ -94,7 +130,7 @@ class ProductController extends Controller
             'prix_achat' => 'required|numeric|min:0',
             'prix_vente' => 'required|numeric|min:0',
             'categorie' => 'nullable|string|exists:categories,name',
-            'quantite' => 'required|integer|min:0',
+            // 'quantite' => 'required|integer|min:0',
             'seuil_stock' => 'required|integer|min:0'
         ]);
 
@@ -114,4 +150,5 @@ class ProductController extends Controller
         return redirect()->route('products.index')
             ->with('success', 'Produit supprimé avec succès.');
     }
+
 }

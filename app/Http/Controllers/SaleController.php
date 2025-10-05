@@ -37,7 +37,19 @@ class SaleController extends Controller
             ->orderBy('nom')
             ->get();
 
-        return view('sales.create', compact('products'));
+        // Vérifier s'il y a des données de devis à convertir
+        $quoteData = session('quote_to_convert');
+        
+        if ($quoteData) {
+            // Enrichir les items avec les informations complètes des produits
+            $quoteData['items'] = collect($quoteData['items'])->map(function($item) {
+                $product = Product::with('stock')->find($item['product_id']);
+                $item['product'] = $product;
+                return $item;
+            });
+        }
+
+        return view('sales.create', compact('products', 'quoteData'));
     }
 
     /**
@@ -82,6 +94,18 @@ class SaleController extends Controller
                     );
                 }
 
+                // Préparer les notes (inclure info devis si présent)
+                $notes = $request->notes;
+                if ($request->from_quote) {
+                    $quoteData = session('quote_to_convert');
+                    if ($quoteData) {
+                        $notes = "Conversion devis " . $quoteData['quote_numero'] . " - " . $quoteData['client_nom'];
+                        if ($request->notes) {
+                            $notes .= " | " . $request->notes;
+                        }
+                    }
+                }
+
                 // Créer la vente
                 $sale = Sale::create([
                     'product_id' => $request->product_id,
@@ -91,7 +115,7 @@ class SaleController extends Controller
                     'total' => $request->quantite * $request->prix_unitaire,
                     'date_vente' => now()->format('Y-m-d'),
                     'numero_facture' => $this->generateInvoiceNumber(),
-                    'notes' => $request->notes,
+                    'notes' => $notes,
                 ]);
 
                 // Mettre à jour le stock de manière sécurisée

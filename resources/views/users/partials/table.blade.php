@@ -97,26 +97,21 @@
 
                         <!-- Activer/Désactiver -->
                         @if($user->id !== auth()->id())
-                        <form method="POST" action="{{ route('users.toggle-status', $user) }}" style="display: inline;">
-                            @csrf
-                            @method('PATCH')
-                            <button type="submit" 
-                                    class="p-2.5 text-gray-400 hover:text-{{ $user->statut === 'actif' ? 'orange' : 'green' }}-600 hover:bg-{{ $user->statut === 'actif' ? 'orange' : 'green' }}-50 rounded-xl transition-all duration-200 hover:scale-110"
-                                    title="{{ $user->statut === 'actif' ? 'Désactiver' : 'Activer' }} l'utilisateur"
-                                    onclick="return confirm('Êtes-vous sûr de vouloir {{ $user->statut === 'actif' ? 'désactiver' : 'activer' }} cet utilisateur ?')">
-                                @if($user->statut === 'actif')
-                                    <!-- Icône désactiver -->
-                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728L5.636 5.636m12.728 12.728L18.364 5.636M5.636 18.364l12.728-12.728"></path>
-                                    </svg>
-                                @else
-                                    <!-- Icône activer -->
-                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                                    </svg>
-                                @endif
-                            </button>
-                        </form>
+                        <button onclick="confirmStatusToggle('{{ $user->name }}', '{{ route('users.toggle-status', $user) }}', '{{ $user->statut }}', {{ $user->id }})" 
+                                class="p-2.5 text-gray-400 hover:text-{{ $user->statut === 'actif' ? 'orange' : 'green' }}-600 hover:bg-{{ $user->statut === 'actif' ? 'orange' : 'green' }}-50 rounded-xl transition-all duration-200 hover:scale-110"
+                                title="{{ $user->statut === 'actif' ? 'Désactiver' : 'Activer' }} l'utilisateur">
+                            @if($user->statut === 'actif')
+                                <!-- Icône désactiver -->
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728L5.636 5.636m12.728 12.728L18.364 5.636M5.636 18.364l12.728-12.728"></path>
+                                </svg>
+                            @else
+                                <!-- Icône activer -->
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                </svg>
+                            @endif
+                        </button>
                         @endif
 
                         <!-- Supprimer -->
@@ -168,7 +163,7 @@
             Affichage de {{ $users->firstItem() }} à {{ $users->lastItem() }} sur {{ $users->total() }} résultats
         </div>
         <div class="pagination">
-            {{ $users->appends(request()->query())->links('pagination::tailwind') }}
+            {{ $users->appends(request()->query())->links('vendor.pagination.simple-tailwind') }}
         </div>
     </div>
 </div>
@@ -208,6 +203,44 @@
     </div>
 </div>
 
+<!-- Modal de confirmation de changement de statut -->
+<div id="statusModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full hidden z-50">
+    <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+        <div class="mt-3 text-center">
+            <div id="statusIconContainer" class="mx-auto flex items-center justify-center h-12 w-12 rounded-full mb-4">
+                <svg id="statusIcon" class="h-6 w-6 animate-pulse" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z"></path>
+                </svg>
+            </div>
+            <h3 class="text-lg font-medium text-gray-900 mb-2" id="statusModalTitle">Confirmer le changement</h3>
+            <p class="text-sm text-gray-500 mb-4" id="statusModalMessage">
+                <!-- Message dynamique -->
+            </p>
+            <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-3 mb-4">
+                <p class="text-xs text-yellow-800">
+                    <strong>⚠️ Important :</strong> <span id="statusWarningMessage"><!-- Message d'avertissement dynamique --></span>
+                </p>
+            </div>
+            <div class="flex gap-3 justify-center">
+                <button id="cancelStatus" class="px-4 py-2 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400 transition-colors">
+                    Annuler
+                </button>
+                <form id="statusForm" method="POST" style="display: inline;">
+                    @csrf
+                    @method('PATCH')
+                    <button type="submit" id="confirmStatus" class="px-4 py-2 rounded-lg transition-colors">
+                        <span id="statusButtonText">Confirmer</span>
+                        <svg id="statusSpinner" class="animate-spin h-4 w-4 text-white hidden inline ml-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
 <script>
 function confirmDelete(userName, deleteUrl) {
     const modal = document.getElementById('deleteModal');
@@ -219,12 +252,61 @@ function confirmDelete(userName, deleteUrl) {
     modal.classList.remove('hidden');
 }
 
+function confirmStatusToggle(userName, statusUrl, currentStatus, userId) {
+    const modal = document.getElementById('statusModal');
+    const statusForm = document.getElementById('statusForm');
+    const statusModalTitle = document.getElementById('statusModalTitle');
+    const statusModalMessage = document.getElementById('statusModalMessage');
+    const statusWarningMessage = document.getElementById('statusWarningMessage');
+    const statusButtonText = document.getElementById('statusButtonText');
+    const confirmButton = document.getElementById('confirmStatus');
+    const statusIconContainer = document.getElementById('statusIconContainer');
+    const statusIcon = document.getElementById('statusIcon');
+    
+    const isDeactivating = currentStatus === 'actif';
+    
+    // Configuration du modal selon l'action
+    if (isDeactivating) {
+        statusModalTitle.textContent = 'Désactiver l\'utilisateur';
+        statusModalMessage.innerHTML = `Êtes-vous sûr de vouloir <strong>désactiver</strong> l'utilisateur <strong>${userName}</strong> ?`;
+        statusWarningMessage.textContent = 'L\'utilisateur sera immédiatement déconnecté et ne pourra plus accéder au système.';
+        statusButtonText.textContent = 'Désactiver';
+        confirmButton.className = 'px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors';
+        statusIconContainer.className = 'mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-orange-100 mb-4';
+        statusIcon.className = 'h-6 w-6 text-orange-600 animate-pulse';
+        statusIcon.innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728L5.636 5.636m12.728 12.728L18.364 5.636M5.636 18.364l12.728-12.728"></path>';
+    } else {
+        statusModalTitle.textContent = 'Activer l\'utilisateur';
+        statusModalMessage.innerHTML = `Êtes-vous sûr de vouloir <strong>réactiver</strong> l'utilisateur <strong>${userName}</strong> ?`;
+        statusWarningMessage.textContent = 'L\'utilisateur pourra à nouveau se connecter et accéder au système selon ses permissions.';
+        statusButtonText.textContent = 'Activer';
+        confirmButton.className = 'px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors';
+        statusIconContainer.className = 'mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-green-100 mb-4';
+        statusIcon.className = 'h-6 w-6 text-green-600 animate-pulse';
+        statusIcon.innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>';
+    }
+    
+    statusForm.action = statusUrl;
+    modal.classList.remove('hidden');
+}
+
+// Événements pour fermer les modaux
 document.getElementById('cancelDelete').addEventListener('click', function() {
     document.getElementById('deleteModal').classList.add('hidden');
 });
 
-// Fermer le modal en cliquant à l'extérieur
+document.getElementById('cancelStatus').addEventListener('click', function() {
+    document.getElementById('statusModal').classList.add('hidden');
+});
+
+// Fermer les modaux en cliquant à l'extérieur
 document.getElementById('deleteModal').addEventListener('click', function(e) {
+    if (e.target === this) {
+        this.classList.add('hidden');
+    }
+});
+
+document.getElementById('statusModal').addEventListener('click', function(e) {
     if (e.target === this) {
         this.classList.add('hidden');
     }
@@ -234,6 +316,7 @@ document.getElementById('deleteModal').addEventListener('click', function(e) {
 document.addEventListener('keydown', function(e) {
     if (e.key === 'Escape') {
         document.getElementById('deleteModal').classList.add('hidden');
+        document.getElementById('statusModal').classList.add('hidden');
     }
 });
 </script>

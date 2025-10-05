@@ -17,6 +17,7 @@ return new class extends Migration
             $table->string('invoice_number')->unique();
             $table->string('client_name');
             $table->string('vendor_name');
+            $table->string('client_phone')->nullable();
             $table->string('client_location')->nullable();
             $table->date('invoice_date');
             $table->decimal('total_amount', 10, 2);

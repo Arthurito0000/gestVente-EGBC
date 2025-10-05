@@ -22,17 +22,19 @@ class DashboardController extends Controller
         $period = $request->get('period', 'month'); // jour, semaine, mois, trimestre, année, custom
         $startDate = $request->get('start_date');
         $endDate = $request->get('end_date');
+        $productId = $request->get('product_id');
 
         // Calculer les dates selon la période
         $dates = $this->calculatePeriodDates($period, $startDate, $endDate);
 
         // KPIs selon le rôle
         if ($user->isAdmin()) {
-            $data = $this->getAdminDashboard($dates, $period);
+            $data = $this->getAdminDashboard($dates, $period, $productId);
         } elseif ($user->isStockManager()) {
-            $data = $this->getStockManagerDashboard($dates, $period);
+            $data = $this->getStockManagerDashboard($dates, $period, $productId);
         } elseif ($user->isSeller()) {
-            $data = $this->getSellerDashboard($dates, $period, $user);
+            // Vendeur: statistiques globales, pas personnelles
+            $data = $this->getSellerDashboard($dates, $period, $productId);
         } else {
             $data = $this->getBasicDashboard($dates, $period);
         }
@@ -41,6 +43,9 @@ class DashboardController extends Controller
         $data['start_date'] = $dates['start']->format('Y-m-d');
         $data['end_date'] = $dates['end']->format('Y-m-d');
         $data['user_role'] = $user->getFormattedRoleName();
+        $data['product_id'] = $productId;
+        $data['products_list'] = Product::select('id', 'sku', 'nom')->orderBy('nom')->get();
+
 
         return view('dashboard', $data);
     }
@@ -48,59 +53,59 @@ class DashboardController extends Controller
     /**
      * Dashboard pour Administrateur - Vue complète
      */
-    private function getAdminDashboard($dates, $period)
+    private function getAdminDashboard($dates, $period, $productId = null)
     {
         $previousDates = $this->getPreviousPeriodDates($dates, $period);
 
         return [
             // KPIs Financiers
-            'chiffre_affaires' => $this->getChiffreAffaires($dates),
-            'chiffre_affaires_precedent' => $this->getChiffreAffaires($previousDates),
-            'benefice_net' => $this->getBeneficeNet($dates),
-            'benefice_precedent' => $this->getBeneficeNet($previousDates),
-            
+            'chiffre_affaires' => $this->getChiffreAffaires($dates, $productId),
+            'chiffre_affaires_precedent' => $this->getChiffreAffaires($previousDates, $productId),
+            'benefice_net' => $this->getBeneficeNet($dates, $productId),
+            'benefice_precedent' => $this->getBeneficeNet($previousDates, $productId),
+            'nombre_ventes' => $this->getNombreVentes($dates, $productId),
+
             // KPIs Produits
             'total_produits' => Product::count(),
-            'produits_vendus' => $this->getProduitsVendus($dates),
+            'produits_vendus' => $this->getProduitsVendus($dates, $productId),
             'top_produits' => $this->getTopProduits($dates, 5),
-            'produits_invendus' => $this->getProduitsInvendus($dates),
-            
+
             // KPIs Stock
-            'valeur_stock' => $this->getValeurStock(),
-            'produits_rupture' => $this->getProduitsRupture(),
-            'produits_alerte' => $this->getProduitsAlerte(),
-            'mouvements_recents' => $this->getMovementsRecents(10),
-            
-            // KPIs Vendeurs
-            'top_vendeurs' => $this->getTopVendeurs($dates, 5),
-            'ventes_par_categorie' => $this->getVentesParCategorie($dates),
-            
-            // Graphiques
+            'valeur_stock' => $this->getValeurStock($productId),
+            'produits_rupture' => $this->getProduitsRupture($productId),
+            'produits_alerte' => $this->getProduitsAlerte($productId),
+
+            // Répartition
+            'ventes_par_categorie' => $this->getVentesParCategorie($dates, $productId),
+
+            // Activité
+            'top_vendeurs' => $this->getTopVendeurs($dates, 10),
+            'mouvements_recents' => $this->getMovementsRecents(10, $productId),
+
+            // Graphiques (no-op placeholders)
             'evolution_ca' => $this->getEvolutionCA($dates, $period),
             'repartition_categories' => $this->getRepartitionCategories($dates),
         ];
     }
-
+ 
     /**
      * Dashboard pour Gérant de Stock - Focus stock et produits
      */
-    private function getStockManagerDashboard($dates, $period)
+    private function getStockManagerDashboard($dates, $period, $productId = null)
     {
         return [
             // KPIs Stock
             'total_produits' => Product::count(),
-            'valeur_stock' => $this->getValeurStock(),
-            'produits_rupture' => $this->getProduitsRupture(),
-            'produits_alerte' => $this->getProduitsAlerte(),
+            'valeur_stock' => $this->getValeurStock($productId),
+            'produits_rupture' => $this->getProduitsRupture($productId),
+            'produits_alerte' => $this->getProduitsAlerte($productId),
             
             // Mouvements
-            'entrees_periode' => $this->getEntreesPeriode($dates),
-            'sorties_periode' => $this->getSortiesPeriode($dates),
-            'mouvements_recents' => $this->getMovementsRecents(15),
+            'entrees_periode' => $this->getEntreesPeriode($dates, $productId),
+            'sorties_periode' => $this->getSortiesPeriode($dates, $productId),
             
             // Analyses produits
             'top_produits_stock' => $this->getTopProduitsStock(10),
-            'produits_invendus' => $this->getProduitsInvendus($dates),
             'categories_stock' => $this->getCategoriesStock(),
             
             // Graphiques
@@ -111,25 +116,17 @@ class DashboardController extends Controller
     /**
      * Dashboard pour Vendeur - Focus ventes personnelles
      */
-    private function getSellerDashboard($dates, $period, $user)
+    private function getSellerDashboard($dates, $period, $productId = null)
     {
         return [
-            // KPIs Ventes personnelles
-            'mes_ventes' => $this->getMesVentes($dates, $user),
-            'mon_ca' => $this->getMonCA($dates, $user),
-            'mes_ventes_precedent' => $this->getMesVentes($this->getPreviousPeriodDates($dates, $period), $user),
+            // KPIs Ventes globales (pas personnelles)
+            'nombre_ventes' => $this->getNombreVentes($dates, $productId),
+            'chiffre_affaires' => $this->getChiffreAffaires($dates, $productId),
+            'produits_vendus' => $this->getProduitsVendus($dates, $productId),
             
-            // Produits
-            'mes_top_produits' => $this->getMesTopProduits($dates, $user, 5),
+            // Stock infos utiles
+            'produits_alerte' => $this->getProduitsAlerte($productId),
             'produits_disponibles' => $this->getProduitsDisponibles(),
-            'produits_alerte' => $this->getProduitsAlerte(), // Pour savoir quoi ne pas vendre
-            
-            // Comparaisons
-            'classement_vendeurs' => $this->getClassementVendeurs($dates),
-            'ma_position' => $this->getMaPosition($dates, $user),
-            
-            // Graphiques
-            'evolution_mes_ventes' => $this->getEvolutionMesVentes($dates, $period, $user),
         ];
     }
 
@@ -201,14 +198,17 @@ class DashboardController extends Controller
 
     // ==================== MÉTHODES DE CALCUL KPIs ====================
 
-    private function getChiffreAffaires($dates)
+    private function getChiffreAffaires($dates, $productId = null)
     {
-        return Sale::betweenDates($dates['start'], $dates['end'])->sum('total') ?? 0;
+        return Sale::betweenDates($dates['start'], $dates['end'])
+            ->when($productId, function($q) use ($productId){ $q->where('product_id', $productId); })
+            ->sum('total') ?? 0;
     }
 
-    private function getBeneficeNet($dates)
+    private function getBeneficeNet($dates, $productId = null)
     {
         $ventes = Sale::betweenDates($dates['start'], $dates['end'])
+            ->when($productId, function($q) use ($productId){ $q->where('product_id', $productId); })
             ->with('product')
             ->get();
 
@@ -221,9 +221,18 @@ class DashboardController extends Controller
         return $benefice;
     }
 
-    private function getProduitsVendus($dates)
+    private function getProduitsVendus($dates, $productId = null)
     {
-        return Sale::betweenDates($dates['start'], $dates['end'])->sum('quantite') ?? 0;
+        return Sale::betweenDates($dates['start'], $dates['end'])
+            ->when($productId, function($q) use ($productId){ $q->where('product_id', $productId); })
+            ->sum('quantite') ?? 0;
+    }
+
+    private function getNombreVentes($dates, $productId = null)
+    {
+        return Sale::betweenDates($dates['start'], $dates['end'])
+            ->when($productId, function($q) use ($productId){ $q->where('product_id', $productId); })
+            ->count();
     }
 
     private function getTopProduits($dates, $limit = 5)
@@ -249,30 +258,36 @@ class DashboardController extends Controller
             ->take(10);
     }
 
-    private function getValeurStock()
+    private function getValeurStock($productId = null)
     {
-        return Stock::join('products', 'stocks.product_id', '=', 'products.id')
-            ->selectRaw('SUM(stocks.quantite * products.prix_achat) as valeur_totale')
-            ->value('valeur_totale') ?? 0;
+        $query = Stock::join('products', 'stocks.product_id', '=', 'products.id')
+            ->selectRaw('SUM(stocks.quantite * products.prix_achat) as valeur_totale');
+        if ($productId) {
+            $query->where('stocks.product_id', $productId);
+        }
+        return $query->value('valeur_totale') ?? 0;
     }
 
-    private function getProduitsRupture()
+    private function getProduitsRupture($productId = null)
     {
         return Stock::where('quantite', 0)
+            ->when($productId, function($q) use ($productId){ $q->where('product_id', $productId); })
             ->with('product')
             ->get();
     }
 
-    private function getProduitsAlerte()
+    private function getProduitsAlerte($productId = null)
     {
         return Stock::whereRaw('quantite <= seuil AND quantite > 0')
+            ->when($productId, function($q) use ($productId){ $q->where('product_id', $productId); })
             ->with('product')
             ->get();
     }
 
-    private function getMovementsRecents($limit = 10)
+    private function getMovementsRecents($limit = 10, $productId = null)
     {
         return Movement::with(['product'])
+            ->when($productId, function($q) use ($productId){ $q->where('product_id', $productId); })
             ->orderBy('created_at', 'desc')
             ->limit($limit)
             ->get();
@@ -289,10 +304,11 @@ class DashboardController extends Controller
             ->get();
     }
 
-    private function getVentesParCategorie($dates)
+    private function getVentesParCategorie($dates, $productId = null)
     {
         return Sale::betweenDates($dates['start'], $dates['end'])
             ->join('products', 'sales.product_id', '=', 'products.id')
+            ->when($productId, function($q) use ($productId){ $q->where('sales.product_id', $productId); })
             ->select('products.categorie', DB::raw('SUM(sales.total) as ca_categorie'))
             ->groupBy('products.categorie')
             ->orderBy('ca_categorie', 'desc')
@@ -357,17 +373,19 @@ class DashboardController extends Controller
         return null;
     }
 
-    private function getEntreesPeriode($dates)
+    private function getEntreesPeriode($dates, $productId = null)
     {
         return Movement::betweenDates($dates['start'], $dates['end'])
             ->where('type', 'ENTREE')
+            ->when($productId, function($q) use ($productId){ $q->where('product_id', $productId); })
             ->sum('quantite') ?? 0;
     }
 
-    private function getSortiesPeriode($dates)
+    private function getSortiesPeriode($dates, $productId = null)
     {
         return Movement::betweenDates($dates['start'], $dates['end'])
             ->where('type', 'SORTIE')
+            ->when($productId, function($q) use ($productId){ $q->where('product_id', $productId); })
             ->sum('quantite') ?? 0;
     }
 

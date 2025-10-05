@@ -15,6 +15,16 @@
             border-bottom: 2px solid #3b82f6;
             padding-bottom: 10px;
         }
+        .header-logo {
+            text-align: center;
+            margin-bottom: 15px;
+        }
+        .header-logo img {
+            max-height: 50px;
+            max-width: 150px;
+            height: auto;
+            width: auto;
+        }
         .header h1 {
             color: #3b82f6;
             margin: 0;
@@ -72,6 +82,10 @@
 </head>
 <body>
     <div class="header">
+        <!-- Logo de l'entreprise -->
+        <div class="header-logo">
+            <img src="{{ asset('images/logo.png') }}" alt="Logo EGBC">
+        </div>
         <h1>Liste des Produits</h1>
         <p>Exporté le {{ $stats['export_date'] }}</p>
         <p>Total : {{ $stats['total_products'] }} produit(s)</p>
@@ -127,7 +141,10 @@
     </table>
 
     <div class="footer">
-        <p>Document généré automatiquement par le système de gestion des ventes</p>
+        <p><strong>ETS GLASS LE BIEN CONSTRUCTION (EGBC)</strong></p>
+        <p>Agence PK19 - Vente des Vitres - aluminium -accessoires</p>
+        <p>Tél: 657 91 9 30 / 670 51 71 34</p>
+        <p>Document généré automatiquement le {{ date('d/m/Y à H:i') }}</p>
         <p>© {{ date('Y') }} - Tous droits réservés</p>
     </div>
 </body>

@@ -33,9 +33,9 @@
         </div>
 
         <!-- Modal: Ajouter Catégorie -->
-        <div id="categoryModal" class="fixed inset-0 z-50 hidden">
-          <div class="absolute inset-0 bg-black/50"></div>
-          <div class="relative w-full h-full flex items-center justify-center p-4">
+        <div id="categoryModal" class="fixed inset-0 hidden items-center justify-center" style="z-index: 99998;">
+          <div class="absolute inset-0 bg-black/50" id="modalBackdrop"></div>
+          <div class="relative w-full max-w-lg p-4" style="z-index: 99999;">
             <div class="w-full max-w-lg bg-white rounded-2xl shadow-xl border border-gray-200 overflow-hidden">
               <div class="px-6 py-4 border-b flex items-center justify-between">
                 <h3 class="font-heading text-lg text-gray-900">Ajouter une catégorie</h3>
@@ -68,16 +68,18 @@
             const closeBtn = document.getElementById('closeCategoryModal');
             const cancelBtn = document.getElementById('cancelCategoryModal');
             const form = document.getElementById('categoryForm');
-            const backdrop = modal.querySelector('.absolute.inset-0');
+            const backdrop = document.getElementById('modalBackdrop');
 
             function openModal(){ 
                 modal.classList.remove('hidden'); 
-                document.body.classList.add('overflow-hidden'); 
+                modal.style.display = 'flex';
+                document.body.style.overflow = 'hidden';
             }
             
             function closeModal(){ 
                 modal.classList.add('hidden'); 
-                document.body.classList.remove('overflow-hidden'); 
+                modal.style.display = 'none';
+                document.body.style.overflow = '';
                 form.reset();
             }
 

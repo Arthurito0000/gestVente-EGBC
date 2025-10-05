@@ -326,18 +326,17 @@ document.getElementById('permissionForm').addEventListener('submit', function(e)
     .then(response => response.json())
     .then(data => {
         if (data.success) {
-            // Afficher un message de succès (vous pouvez utiliser Toastr ici)
-            alert('Permissions mises à jour avec succès !');
+            toastr.success(data.message || 'Permissions mises à jour avec succès !');
             closePermissionModal();
             // Recharger la page pour voir les changements
             window.location.reload();
         } else {
-            alert('Erreur lors de la mise à jour des permissions.');
+            toastr.error('Erreur lors de la mise à jour des permissions.');
         }
     })
     .catch(error => {
         console.error('Erreur:', error);
-        alert('Erreur lors de la mise à jour des permissions.');
+        toastr.error('Erreur lors de la mise à jour des permissions.');
     });
 });
 </script>

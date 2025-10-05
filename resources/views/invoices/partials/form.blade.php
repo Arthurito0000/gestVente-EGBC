@@ -3,7 +3,25 @@
     $action = $action ?? '#';
     $method = strtoupper($method ?? 'POST');
     $invoice = $invoice ?? null;
+    $quoteData = $quoteData ?? null;
 @endphp
+
+@if($quoteData)
+<!-- Message d'information sur le devis -->
+<div class="bg-blue-50 border-l-4 border-blue-500 rounded-lg p-4 mb-6">
+    <div class="flex items-start">
+        <svg class="w-6 h-6 text-blue-500 mr-3 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+        </svg>
+        <div class="flex-1">
+            <h3 class="text-lg font-semibold text-blue-900 mb-1">📋 Conversion du devis {{ $quoteData['quote_numero'] }}</h3>
+            <p class="text-sm text-blue-700">
+                Les informations du devis ont été pré-remplies. Ajoutez simplement le <strong>téléphone du client</strong> et validez la facture.
+            </p>
+        </div>
+    </div>
+</div>
+@endif
 
 <form action="{{ route('invoices.store') }}" method="POST" class="space-y-6" id="invoiceForm">
     @csrf
@@ -47,7 +65,7 @@
             <div>
                 <label class="block text-sm font-medium text-gray-700 mb-1">Date de facture</label>
                 <input name="invoice_date" type="date"
-                    value="{{ old('invoice_date', isset($invoice) ? \Illuminate\Support\Carbon::parse($invoice->invoice_date)->format('Y-m-d') : now()->format('Y-m-d')) }}"
+                    value="{{ old('invoice_date', $quoteData['date_devis'] ?? (isset($invoice) ? \Illuminate\Support\Carbon::parse($invoice->invoice_date)->format('Y-m-d') : now()->format('Y-m-d'))) }}"
                     class="w-full rounded-lg border-gray-300 focus:ring-primary-600 focus:border-primary-600 px-3 py-3" />
 
                 @error('invoice_date')
@@ -57,22 +75,28 @@
 
             <div>
                 <label class="block text-sm font-medium text-gray-700 mb-1">Client (Nom)</label>
-                <input name="client_name" type="text" value="{{ old('client_name', $invoice->client_name ?? '') }}"
-                    class="w-full rounded-lg border-gray-300 focus:ring-primary-600 focus:border-primary-600 px-3 py-3"
-                    placeholder="Acme SARL" />
+                <input name="client_name" type="text" value="{{ old('client_name', $quoteData['client_nom'] ?? ($invoice->client_name ?? '')) }}"
+                    class="w-full rounded-lg border-gray-300 focus:ring-primary-600 focus:border-primary-600 px-3 py-3 {{ $quoteData ? 'bg-gray-50' : '' }}"
+                    placeholder="Acme SARL" {{ $quoteData ? 'readonly' : '' }} />
                 @error('client_name')
                     <p class="mt-1 text-xs text-red-600">{{ $message }}</p>
                 @enderror
+                @if($quoteData)
+                    <p class="mt-1 text-xs text-gray-500">Nom du client depuis le devis</p>
+                @endif
             </div>
             <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">Client (Localisation)</label>
-                <input name="client_location" type="text"
-                    value="{{ old('client_location', $invoice->client_location ?? '') }}"
-                    class="w-full rounded-lg border-gray-300 focus:ring-primary-600 focus:border-primary-600 px-3 py-3"
-                    placeholder="Douala, Cameroun" />
-                @error('client_location')
+                <label class="block text-sm font-medium text-gray-700 mb-1">Client (Téléphone) *</label>
+                <input name="client_phone" type="tel"
+                    value="{{ old('client_phone', $invoice->client_phone ?? '') }}"
+                    class="w-full rounded-lg border-gray-300 focus:ring-primary-600 focus:border-primary-600 px-3 py-3 {{ $quoteData ? 'border-orange-300 focus:ring-orange-500 focus:border-orange-500' : '' }}"
+                    placeholder="+237 6XX XX XX XX" required />
+                @error('client_phone')
                     <p class="mt-1 text-xs text-red-600">{{ $message }}</p>
                 @enderror
+                @if($quoteData)
+                    <p class="mt-1 text-xs text-orange-600 font-semibold">⚠️ Champ à remplir obligatoirement</p>
+                @endif
             </div>
             <div>
                 <label class="block text-sm font-medium text-gray-700 mb-1">Vendeur</label>
@@ -112,6 +136,20 @@
                 <tbody class="divide-y divide-gray-200 bg-white">
                     @php
                         $oldLines = old('lines');
+                        
+                        // Priorité 1: Données du devis
+                        if (!$oldLines && $quoteData && isset($quoteData['items'])) {
+                            $oldLines = array_map(function ($item) {
+                                return [
+                                    'product_id' => $item['product_id'],
+                                    'quantity' => $item['quantite'],
+                                    'unit_price' => $item['prix_unitaire'],
+                                    'total_price' => $item['prix_total'],
+                                ];
+                            }, $quoteData['items']);
+                        }
+                        
+                        // Priorité 2: Données de la facture existante
                         if (!$oldLines && isset($invoice)) {
                             $oldLines = $invoice->products
                                 ->map(function ($p) {
@@ -228,7 +266,7 @@
                             </div>
                         </div>
                         <input type="hidden" id="total_amount" name="total_amount"
-                            value="{{ old('total_amount', $invoice->total_amount ?? 0) }}" />
+                            value="{{ old('total_amount', $quoteData['total_amount'] ?? ($invoice->total_amount ?? 0)) }}" />
                         @error('total_amount')
                             <p class="mt-2 text-xs text-red-600">{{ $message }}</p>
                         @enderror

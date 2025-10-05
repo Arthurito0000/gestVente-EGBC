@@ -30,7 +30,7 @@
                         id="name" 
                         name="name" 
                         value="{{ old('name') }}"
-                        class="w-full rounded-lg border-gray-300 focus:outline-none focus:ring-0 focus:border-blue-500 @error('name') border-red-500 @enderror"
+                        class="w-full rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 @error('name') border-red-500 @enderror"
                         placeholder="Ex: Jean Dupont"
                         required
                     >
@@ -49,7 +49,7 @@
                         id="email" 
                         name="email" 
                         value="{{ old('email') }}"
-                        class="w-full rounded-lg border-gray-300 focus:outline-none focus:ring-0 focus:border-blue-500 @error('email') border-red-500 @enderror"
+                        class="w-full rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 @error('email') border-red-500 @enderror"
                         placeholder="Ex: jean.dupont@gesteventes.com"
                         required
                     >
@@ -66,7 +66,7 @@
                     <select 
                         id="role" 
                         name="role" 
-                        class="w-full rounded-lg border-gray-300 focus:outline-none focus:ring-0 focus:border-blue-500 @error('role') border-red-500 @enderror"
+                        class="w-full rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 @error('role') border-red-500 @enderror"
                         required
                     >
                         <option value="">Sélectionnez un rôle</option>
@@ -102,7 +102,7 @@
                         type="password" 
                         id="password" 
                         name="password" 
-                        class="w-full rounded-lg border-gray-300 focus:outline-none focus:ring-0 focus:border-blue-500 @error('password') border-red-500 @enderror"
+                        class="w-full rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 @error('password') border-red-500 @enderror"
                         placeholder="Minimum 8 caractères"
                         required
                     >
@@ -120,7 +120,7 @@
                         type="password" 
                         id="password_confirmation" 
                         name="password_confirmation" 
-                        class="w-full rounded-lg border-gray-300 focus:outline-none focus:ring-0 focus:border-blue-500"
+                        class="w-full rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                         placeholder="Répétez le mot de passe"
                         required
                     >
@@ -151,13 +151,13 @@ document.querySelector('form').addEventListener('submit', function(e) {
     
     if (password !== passwordConfirmation) {
         e.preventDefault();
-        alert('Les mots de passe ne correspondent pas !');
+        toastr.error('Les mots de passe ne correspondent pas !');
         return false;
     }
     
     if (password.length < 8) {
         e.preventDefault();
-        alert('Le mot de passe doit contenir au moins 8 caractères !');
+        toastr.error('Le mot de passe doit contenir au moins 8 caractères !');
         return false;
     }
 });

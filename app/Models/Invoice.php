@@ -10,6 +10,7 @@ class Invoice extends Model
         'code',
         'invoice_number',
         'client_name',
+        'client_phone',
         'vendor_name',
         'client_location',
         'invoice_date',

@@ -46,6 +46,10 @@
 
     <!-- Toastr JS -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
+    
+    <!-- Searchable Select Component -->
+    <script src="{{ asset('js/searchable-select.js') }}"></script>
+    
     <style>
         :root {
             --sidebar-expanded: 16rem;
@@ -86,6 +90,11 @@
             transition: padding 200ms, gap 200ms;
         }
         
+        /* 🔴 BUG FIX C - Alpine.js x-cloak pour éviter flash de contenu */
+        [x-cloak] {
+            display: none !important;
+        }
+        
         /* SOLUTION DEFINITIVE - Menu utilisateur au-dessus de TOUT */
         .user-dropdown {
             z-index: 99999 !important;
@@ -97,22 +106,77 @@
             position: absolute !important;
         }
         
-        /* Forcer TOUS les champs de recherche à rester en bas */
-        .relative:has(input[type="text"]) {
-            z-index: -1 !important;
+        /* Styles spécifiques pour les champs de recherche dans les en-têtes */
+        header .relative:has(input[type="text"]) {
+            z-index: 1 !important;
         }
-        
-        .relative input[type="text"] {
-            z-index: -1 !important;
+
+        /* STYLES DE PAGINATION POUR TAILWIND CDN */
+        .pagination, .pagination-links {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
         }
-        
-        .relative .absolute {
-            z-index: -1 !important;
+        .pagination nav, .pagination-links nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            width: 100%;
         }
-        
-        /* Forcer spécifiquement les pages produits et stock */
-        .space-y-6 .relative {
-            z-index: -1 !important;
+        .pagination .hidden, .pagination-links .hidden {
+            display: none;
+        }
+        .pagination .flex-1, .pagination-links .flex-1 {
+            flex: 1 1 0%;
+        }
+        .pagination p, .pagination-links p {
+            color: #6B7280;
+            font-size: 0.875rem;
+            line-height: 1.25rem;
+        }
+        .pagination span, .pagination a, .pagination-links span, .pagination-links a {
+            position: relative;
+            display: inline-flex;
+            align-items: center;
+            padding: 0.5rem 1rem;
+            font-size: 0.875rem;
+            line-height: 1.25rem;
+            font-weight: 500;
+            border-width: 1px;
+            border-color: #D1D5DB;
+            background-color: #FFFFFF;
+            color: #6B7280;
+            margin-left: -1px;
+            text-decoration: none;
+        }
+        .pagination a:hover, .pagination-links a:hover {
+            color: #3B82F6;
+            background-color: #EFF6FF;
+        }
+        .pagination span[aria-disabled="true"], .pagination-links span[aria-disabled="true"] {
+            color: #9CA3AF;
+            background-color: #F9FAFB;
+            cursor: default;
+        }
+        .pagination span[aria-current="page"] span, .pagination-links span[aria-current="page"] span {
+            z-index: 10;
+            color: #FFFFFF;
+            background-color: #2563EB;
+            border-color: #2563EB;
+        }
+        .pagination a:first-child, .pagination span:first-child, 
+        .pagination-links a:first-child, .pagination-links span:first-child {
+            border-top-left-radius: 0.375rem;
+            border-bottom-left-radius: 0.375rem;
+        }
+        .pagination a:last-child, .pagination span:last-child,
+        .pagination-links a:last-child, .pagination-links span:last-child {
+            border-top-right-radius: 0.375rem;
+            border-bottom-right-radius: 0.375rem;
+        }
+        .pagination svg, .pagination-links svg {
+            height: 1.25rem;
+            width: 1.25rem;
         }
     </style>
 </head>
@@ -158,6 +222,7 @@
                             Inventaire</div>
                         
                         @can('manage-categories')
+                        @if(!auth()->user()->isSalesManager())
                         <a href="{{ route('categories.index') }}"
                             class="group flex items-center gap-x-3 px-3 py-2 rounded-lg hover:bg-white/10 {{ request()->routeIs('categories.*') ? 'bg-white/10' : '' }}">
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -166,9 +231,11 @@
                             </svg>
                             <span class="truncate nav-label">Catégories</span>
                         </a>
+                        @endif
                         @endcan
 
                         @can('view-products')
+                        @if(!auth()->user()->isSalesManager())
                         <a href="{{ route('products.index') }}"
                             class="group flex items-center gap-x-3 px-3 py-2 rounded-lg hover:bg-white/10 {{ request()->routeIs('products.*') ? 'bg-white/10' : '' }}">
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -177,6 +244,7 @@
                             </svg>
                             <span class="truncate nav-label">Produits</span>
                         </a>
+                        @endif
                         @endcan
 
                         @can('view-stock')
@@ -208,6 +276,20 @@
                     <li>
                         <div class="text-xs uppercase tracking-wider text-white/70 px-3 pt-4 pb-1 section-label">Ventes
                         </div>
+                        
+                        @can('create-sales')
+                        @if(!auth()->user()->isSalesManager())
+                        <a href="{{ route('quotes.index') }}"
+                            class="group flex items-center gap-x-3 px-3 py-2 rounded-lg hover:bg-white/10 {{ request()->routeIs('quotes.*') ? 'bg-white/10' : '' }}">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+                                    d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                            </svg>
+                            <span class="truncate nav-label">Devis</span>
+                        </a>
+                        @endif
+                        @endcan
+                        
                         <a href="{{ route('invoices.index') }}"
                             class="group flex items-center gap-x-3 px-3 py-2 rounded-lg hover:bg-white/10 {{ request()->routeIs('invoices.*') ? 'bg-white/10' : '' }}">
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -300,8 +382,9 @@
                     </div>
 
                     <!-- Menu utilisateur -->
-                    <div class="relative user-dropdown" x-data="{ open: false }" style="z-index: 99999 !important; position: relative !important;">
-                        <button @click="open = !open" class="flex items-center gap-2 p-2 rounded-lg hover:bg-gray-100 transition-colors">
+                    <!-- 🔴 BUG FIX C : Empêcher ouverture automatique du menu profil -->
+                    <div class="relative user-dropdown" x-data="{ open: false }" @click.outside="open = false" style="z-index: 99999 !important; position: relative !important;">
+                        <button @click.stop="open = !open" type="button" class="flex items-center gap-2 p-2 rounded-lg hover:bg-gray-100 transition-colors">
                             <div class="w-9 h-9 rounded-full bg-primary-600 text-white flex items-center justify-center font-heading text-sm">
                                 {{ strtoupper(substr(auth()->user()->name, 0, 2)) }}
                             </div>
@@ -309,13 +392,23 @@
                                 <div class="text-sm font-medium text-gray-900">{{ auth()->user()->name }}</div>
                                 <div class="text-xs text-gray-500">{{ auth()->user()->getFormattedRoleName() }}</div>
                             </div>
-                            <svg class="w-4 h-4 text-gray-400" :class="{'rotate-180': open}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <svg class="w-4 h-4 text-gray-400 transition-transform" :class="{'rotate-180': open}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
                             </svg>
                         </button>
 
                         <!-- Menu déroulant -->
-                        <div x-show="open" @click.away="open = false" x-transition class="dropdown-menu absolute right-0 mt-2 w-64 bg-white rounded-lg shadow-lg border py-2" style="z-index: 99999 !important; position: absolute !important;">
+                        <div x-show="open" 
+                             x-cloak
+                             @click.outside="open = false" 
+                             x-transition:enter="transition ease-out duration-100"
+                             x-transition:enter-start="opacity-0 scale-95"
+                             x-transition:enter-end="opacity-100 scale-100"
+                             x-transition:leave="transition ease-in duration-75"
+                             x-transition:leave-start="opacity-100 scale-100"
+                             x-transition:leave-end="opacity-0 scale-95"
+                             class="dropdown-menu absolute right-0 mt-2 w-64 bg-white rounded-lg shadow-lg border py-2" 
+                             style="z-index: 99999 !important; position: absolute !important; display: none;">
                             <div class="px-4 py-3 border-b">
                                 <div class="flex items-center gap-3">
                                     <div class="w-10 h-10 rounded-full bg-primary-600 text-white flex items-center justify-center font-heading">
@@ -582,38 +675,83 @@
             let html = '<div class="space-y-4">';
             
             notifications.forEach(notification => {
-                const priorityColor = notification.priority === 'high' ? 'border-red-200 bg-red-50' : 'border-orange-200 bg-orange-50';
-                const iconColor = notification.priority === 'high' ? 'text-red-600' : 'text-orange-600';
+                // Gestion des couleurs selon la priorité
+                let priorityColor, iconColor, titleColor, icon;
+                
+                if (notification.priority === 'critical') {
+                    // RUPTURE DE STOCK - Rouge foncé avec animation
+                    priorityColor = 'border-red-500 bg-red-100 shadow-lg';
+                    iconColor = 'text-red-700';
+                    titleColor = 'text-red-800';
+                    icon = `<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"></path>`;
+                } else if (notification.priority === 'high') {
+                    // STOCK CRITIQUE - Rouge
+                    priorityColor = 'border-red-200 bg-red-50';
+                    iconColor = 'text-red-600';
+                    titleColor = 'text-red-700';
+                    icon = `<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"></path>`;
+                } else {
+                    // STOCK FAIBLE - Orange
+                    priorityColor = 'border-orange-200 bg-orange-50';
+                    iconColor = 'text-orange-600';
+                    titleColor = 'text-orange-700';
+                    icon = `<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"></path>`;
+                }
+                
+                // Animation pour les ruptures critiques
+                const animationClass = notification.priority === 'critical' ? 'animate-pulse' : '';
                 
                 html += `
-                    <div class="border ${priorityColor} rounded-lg p-4">
+                    <div class="border ${priorityColor} rounded-lg p-4 ${animationClass}">
                         <div class="flex items-start gap-3">
                             <div class="flex-shrink-0">
                                 <svg class="w-5 h-5 ${iconColor}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"></path>
+                                    ${icon}
                                 </svg>
                             </div>
                             <div class="flex-1">
-                                <h4 class="font-medium text-gray-900">${notification.details.product_name}</h4>
+                                <div class="flex items-center gap-2">
+                                    <h4 class="font-medium ${titleColor}">${notification.details.product_name}</h4>
+                                    ${notification.priority === 'critical' ? '<span class="text-xs bg-red-600 text-white px-2 py-1 rounded-full font-bold">RUPTURE</span>' : ''}
+                                </div>
                                 <p class="text-sm text-gray-600 mt-1">SKU: ${notification.details.sku}</p>
-                                <div class="mt-2 grid grid-cols-2 gap-4 text-sm">
+                                <p class="text-sm ${titleColor} mt-1 font-medium">${notification.title}</p>
+                                
+                                <div class="mt-3 grid grid-cols-2 gap-4 text-sm">
                                     <div>
                                         <span class="text-gray-500">Stock actuel:</span>
-                                        <span class="font-medium text-gray-900">${notification.details.stock_actuel}</span>
+                                        <span class="font-bold ${notification.details.stock_actuel === 0 ? 'text-red-700' : 'text-gray-900'}">${notification.details.stock_actuel}</span>
                                     </div>
                                     <div>
-                                        <span class="text-gray-500">Seuil:</span>
-                                        <span class="font-medium text-gray-900">${notification.details.seuil}</span>
+                                        <span class="text-gray-500">Seuil critique:</span>
+                                        <span class="font-medium text-gray-900">${notification.details.seuil_critique}</span>
                                     </div>
+                                    ${notification.priority !== 'critical' ? `
                                     <div>
                                         <span class="text-gray-500">Seuil d'alerte:</span>
                                         <span class="font-medium text-orange-600">${notification.details.seuil_alerte}</span>
                                     </div>
                                     <div>
                                         <span class="text-gray-500">Niveau:</span>
-                                        <span class="font-medium ${notification.priority === 'high' ? 'text-red-600' : 'text-orange-600'}">${notification.details.pourcentage}%</span>
+                                        <span class="font-medium ${iconColor}">${notification.details.pourcentage}%</span>
                                     </div>
+                                    ` : `
+                                    <div>
+                                        <span class="text-gray-500">Recommandé:</span>
+                                        <span class="font-medium text-green-600">${notification.details.quantite_recommandee} unités</span>
+                                    </div>
+                                    <div>
+                                        <span class="text-gray-500">Statut:</span>
+                                        <span class="font-bold text-red-700">🚨 URGENT</span>
+                                    </div>
+                                    `}
                                 </div>
+                                
+                                ${notification.priority === 'critical' ? `
+                                <div class="mt-3 p-2 bg-red-200 rounded border-l-4 border-red-500">
+                                    <p class="text-xs text-red-800 font-medium">⚠️ Produit en rupture totale - Aucune vente possible</p>
+                                </div>
+                                ` : ''}
                             </div>
                         </div>
                     </div>
@@ -625,6 +763,12 @@
         }
     });
   </script>
+
+  <!-- Alertes de stock globales -->
+  @include('components.stock-alerts')
+
+  <!-- Scripts personnalisés des pages -->
+  @stack('scripts')
 </body>
 
 </html>

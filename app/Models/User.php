@@ -74,6 +74,14 @@ class User extends Authenticatable implements MustVerifyEmail
     }
 
     /**
+     * Vérifier si l'utilisateur est un gestionnaire de ventes
+     */
+    public function isSalesManager(): bool
+    {
+        return $this->hasRole('gestionnaire_ventes');
+    }
+
+    /**
      * Obtenir le nom du rôle principal
      */
     public function getRoleName(): string
@@ -92,6 +100,7 @@ class User extends Authenticatable implements MustVerifyEmail
             'administrateur' => 'Administrateur',
             'gerant_stock' => 'Gérant de Stock',
             'vendeur' => 'Vendeur',
+            'gestionnaire_ventes' => 'Gestionnaire de ventes',
             default => 'Utilisateur'
         };
     }

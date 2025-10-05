@@ -128,9 +128,18 @@
         </div>
 
         <!-- Pagination -->
+        @if($sales->hasPages())
         <div class="px-6 py-4 border-t border-gray-200">
-            {{ $sales->links() }}
+            <div class="flex items-center justify-between">
+                <div class="text-sm text-gray-700">
+                    Affichage de {{ $sales->firstItem() }} à {{ $sales->lastItem() }} sur {{ $sales->total() }} résultats
+                </div>
+                <div class="pagination-links">
+                    {{ $sales->links('vendor.pagination.simple-tailwind') }}
+                </div>
+            </div>
         </div>
+        @endif
         @else
         <div class="text-center py-12">
             <div class="text-4xl mb-4">💰</div>
@@ -187,4 +196,5 @@
     </div>
     @endif
 </div>
+
 @endsection

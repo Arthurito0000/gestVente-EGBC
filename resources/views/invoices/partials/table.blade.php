@@ -42,30 +42,8 @@
             Affichage de {{ $invoices->firstItem() }} à {{ $invoices->lastItem() }} sur {{ $invoices->total() }} résultats
         </div>
         <div class="pagination-links">
-            {{ $invoices->links('pagination::tailwind') }}
+            {{ $invoices->links('vendor.pagination.simple-tailwind') }}
         </div>
     </div>
 @endif
 
-<style>
-/* Styles pour la pagination bleue */
-.pagination-links .relative {
-  @apply inline-flex items-center;
-}
-
-.pagination-links a, .pagination-links span {
-  @apply px-3 py-2 text-sm leading-tight text-gray-500 bg-white border border-gray-300 hover:bg-blue-50 hover:text-blue-600;
-}
-
-.pagination-links .bg-blue-50 {
-  @apply bg-blue-600 text-white border-blue-600;
-}
-
-.pagination-links a:first-child, .pagination-links span:first-child {
-  @apply rounded-l-lg;
-}
-
-.pagination-links a:last-child, .pagination-links span:last-child {
-  @apply rounded-r-lg;
-}
-</style>

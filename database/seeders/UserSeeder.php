@@ -14,7 +14,7 @@ class UserSeeder extends Seeder
      */
     public function run(): void
     {
-        $this->command->info('🚀 Création de 6 utilisateurs de test avec rôles et statuts...');
+        $this->command->info('🚀 Création de 4 utilisateurs de test...');
 
         // Utilisateur 1 : Admin principal
         $admin = User::updateOrCreate(
@@ -28,19 +28,7 @@ class UserSeeder extends Seeder
         );
         $admin->syncRoles(['administrateur']);
 
-        // Utilisateur 2 : Arthur (développeur/admin)
-        $arthur = User::updateOrCreate(
-            ['email' => 'arthur@gesteventes.com'],
-            [
-                'name' => 'Arthur EGBC',
-                'password' => Hash::make('arthur123'),
-                'statut' => 'actif',
-                'email_verified_at' => now(),
-            ]
-        );
-        $arthur->syncRoles(['administrateur']);
-
-        // Utilisateur 3 : Gérant de stock
+        // Utilisateur 2 : Gérant de stock
         $stockManager = User::updateOrCreate(
             ['email' => 'stock@gesteventes.com'],
             [
@@ -52,8 +40,8 @@ class UserSeeder extends Seeder
         );
         $stockManager->syncRoles(['gerant_stock']);
 
-        // Utilisateur 4 : Vendeur principal
-        $seller1 = User::updateOrCreate(
+        // Utilisateur 3 : Vendeur
+        $seller = User::updateOrCreate(
             ['email' => 'vendeur@gesteventes.com'],
             [
                 'name' => 'Jean Martin',
@@ -62,51 +50,27 @@ class UserSeeder extends Seeder
                 'email_verified_at' => now(),
             ]
         );
-        $seller1->syncRoles(['vendeur']);
+        $seller->syncRoles(['vendeur']);
 
-        // Utilisateur 5 : Vendeur secondaire
-        $seller2 = User::updateOrCreate(
-            ['email' => 'vendeur2@gesteventes.com'],
+        // Utilisateur 4 : Gestionnaire de ventes
+        $salesManager = User::updateOrCreate(
+            ['email' => 'ventes@gesteventes.com'],
             [
-                'name' => 'Sophie Dubois',
-                'password' => Hash::make('vendeur123'),
+                'name' => 'Sophie Lambert',
+                'password' => Hash::make('ventes123'),
                 'statut' => 'actif',
                 'email_verified_at' => now(),
             ]
         );
-        $seller2->syncRoles(['vendeur']);
+        $salesManager->syncRoles(['gestionnaire_ventes']);
 
-        // Utilisateur 6 : Utilisateur inactif (pour démonstration)
-        $inactiveUser = User::updateOrCreate(
-            ['email' => 'inactif@gesteventes.com'],
-            [
-                'name' => 'Utilisateur Inactif',
-                'password' => Hash::make('inactif123'),
-                'statut' => 'inactif',
-                'email_verified_at' => now(),
-            ]
-        );
-        $inactiveUser->syncRoles(['vendeur']);
-
-        $this->command->info('✅ 6 utilisateurs créés avec leurs rôles et statuts !');
+        $this->command->info('✅ 4 utilisateurs créés avec succès !');
         $this->command->info('');
-        $this->command->info('🔐 COMPTES DE TEST DISPONIBLES :');
+        $this->command->info('🔐 COMPTES DE TEST :');
         $this->command->info('══════════════════════════════════════════════════════════');
-        $this->command->info('👑 ADMINISTRATEURS :');
-        $this->command->info('   📧 admin@gesteventes.com      🔑 password123');
-        $this->command->info('   📧 arthur@gesteventes.com     🔑 arthur123');
-        $this->command->info('');
-        $this->command->info('📦 GÉRANT DE STOCK :');
-        $this->command->info('   📧 stock@gesteventes.com      🔑 stock123');
-        $this->command->info('');
-        $this->command->info('💰 VENDEURS :');
-        $this->command->info('   📧 vendeur@gesteventes.com    🔑 vendeur123');
-        $this->command->info('   📧 vendeur2@gesteventes.com   🔑 vendeur123');
-        $this->command->info('');
-        $this->command->info('❌ UTILISATEUR INACTIF (pour test) :');
-        $this->command->info('   📧 inactif@gesteventes.com    🔑 inactif123 (BLOQUÉ)');
-        $this->command->info('');
-        $this->command->info('🎯 Rôles et statuts assignés automatiquement !');
-        $this->command->info('ℹ️  L\'utilisateur inactif ne peut pas se connecter.');
+        $this->command->info('👑 Administrateur         : admin@gesteventes.com   / password123');
+        $this->command->info('📦 Gérant Stock           : stock@gesteventes.com   / stock123');
+        $this->command->info('💰 Vendeur                : vendeur@gesteventes.com / vendeur123');
+        $this->command->info('🏪 Gestionnaire de ventes : ventes@gesteventes.com  / ventes123');
     }
 }

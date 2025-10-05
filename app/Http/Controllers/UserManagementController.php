@@ -3,11 +3,14 @@
 namespace App\Http\Controllers;
 
 use App\Models\User;
+use App\Models\PasswordResetLog;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Password;
+use Illuminate\Validation\Rule;
 use Spatie\Permission\Models\Role;
 use Spatie\Permission\Models\Permission;
-use Illuminate\Support\Facades\Hash;
-use Illuminate\Validation\Rule;
+use App\Notifications\PasswordChangedNotification;
 
 class UserManagementController extends Controller
 {
@@ -86,7 +89,11 @@ class UserManagementController extends Controller
     {
         $roles = Role::all();
         $userRole = $user->roles->first()?->name;
-        return view('users.edit', compact('user', 'roles', 'userRole'));
+        $permissions = Permission::all()->groupBy(function ($permission) {
+            return explode('-', $permission->name)[0];
+        });
+        $userDirectPermissions = $user->permissions->pluck('name')->toArray();
+        return view('users.edit', compact('user', 'roles', 'userRole', 'permissions', 'userDirectPermissions'));
     }
 
     /**
@@ -100,6 +107,8 @@ class UserManagementController extends Controller
             'password' => 'nullable|string|min:8|confirmed',
             'role' => 'required|exists:roles,name',
             'statut' => 'sometimes|in:actif,inactif',
+            'direct_permissions' => 'sometimes|array',
+            'direct_permissions.*' => 'exists:permissions,name',
         ]);
 
         $updateData = [
@@ -119,6 +128,14 @@ class UserManagementController extends Controller
 
         // Synchroniser le rôle
         $user->syncRoles([$request->role]);
+
+        // Synchroniser les permissions directes (supplémentaires par utilisateur)
+        if ($request->has('direct_permissions')) {
+            $user->syncPermissions($request->input('direct_permissions', []));
+        } else {
+            // Si aucune case n'est envoyée, retirer toutes les permissions directes
+            $user->syncPermissions([]);
+        }
 
         return redirect()->route('users.index')
             ->with('success', 'Utilisateur mis à jour avec succès !');
@@ -157,17 +174,32 @@ class UserManagementController extends Controller
     /**
      * Mettre à jour les permissions d'un rôle
      */
-    public function updateRolePermissions(Request $request, Role $role)
+    public function updateRolePermissions(Request $request, $role)
     {
         $request->validate([
             'permissions' => 'array',
             'permissions.*' => 'exists:permissions,name',
         ]);
+        // Récupérer le rôle par nom (ou ID si nécessaire)
+        $roleModel = Role::where('name', $role)->first();
+        if (!$roleModel && is_numeric($role)) {
+            $roleModel = Role::findOrFail((int)$role);
+        }
+        if (!$roleModel) {
+            if ($request->expectsJson() || $request->ajax()) {
+                return response()->json(['success' => false, 'message' => 'Rôle introuvable.'], 404);
+            }
+            return redirect()->route('users.roles')->with('error', 'Rôle introuvable.');
+        }
 
-        $role->syncPermissions($request->permissions ?? []);
+        $roleModel->syncPermissions($request->permissions ?? []);
+
+        if ($request->expectsJson() || $request->ajax()) {
+            return response()->json(['success' => true, 'message' => "Permissions du rôle {$roleModel->name} mises à jour avec succès !"]);
+        }
 
         return redirect()->route('users.roles')
-            ->with('success', "Permissions du rôle {$role->name} mises à jour avec succès !");
+            ->with('success', "Permissions du rôle {$roleModel->name} mises à jour avec succès !");
     }
 
     /**
@@ -201,10 +233,129 @@ class UserManagementController extends Controller
     /**
      * Obtenir les permissions d'un rôle (pour AJAX)
      */
-    public function getRolePermissions(Role $role)
+    public function getRolePermissions($role)
     {
+        $roleModel = Role::where('name', $role)->first();
+        if (!$roleModel && is_numeric($role)) {
+            $roleModel = Role::findOrFail((int)$role);
+        }
+        if (!$roleModel) {
+            return response()->json(['permissions' => []]);
+        }
+
         return response()->json([
-            'permissions' => $role->permissions->pluck('name')->toArray()
+            'permissions' => $roleModel->permissions->pluck('name')->toArray()
         ]);
+    }
+
+    /**
+     * Afficher l'interface de réinitialisation d'urgence
+     */
+    public function showEmergencyReset()
+    {
+        $users = User::where('statut', 'actif')->get();
+        $recentLogs = PasswordResetLog::with('user')
+            ->orderBy('created_at', 'desc')
+            ->take(10)
+            ->get();
+        
+        $stats = PasswordResetLog::getSecurityStats(30);
+
+        return view('users.emergency-reset', compact('users', 'recentLogs', 'stats'));
+    }
+
+    /**
+     * Réinitialiser le mot de passe d'urgence par un administrateur
+     */
+    public function emergencyPasswordReset(Request $request)
+    {
+        $request->validate([
+            'user_id' => 'required|exists:users,id',
+            'new_password' => 'required|min:8|confirmed',
+            'reason' => 'required|string|max:255',
+        ]);
+
+        $user = User::findOrFail($request->user_id);
+        
+        // Empêcher la modification de son propre mot de passe via cette interface
+        if ($user->id === auth()->id()) {
+            return back()->withErrors([
+                'user_id' => 'Vous ne pouvez pas utiliser cette interface pour votre propre compte.'
+            ]);
+        }
+
+        // Logger l'action d'urgence
+        PasswordResetLog::create([
+            'email' => $user->email,
+            'ip_address' => $request->ip(),
+            'user_agent' => $request->userAgent(),
+            'action' => 'emergency_reset',
+            'status' => 'success',
+            'details' => [
+                'admin_user' => auth()->user()->email,
+                'reason' => $request->reason,
+                'timestamp' => now()->toISOString(),
+            ],
+        ]);
+
+        // Mettre à jour le mot de passe
+        $user->update([
+            'password' => Hash::make($request->new_password),
+        ]);
+
+        // Envoyer la notification
+        $user->notify(new PasswordChangedNotification(
+            $request->ip(),
+            $request->userAgent()
+        ));
+
+        return redirect()->route('users.emergency-reset')
+            ->with('success', "Mot de passe réinitialisé avec succès pour {$user->name}. L'utilisateur a été notifié par email.");
+    }
+
+    /**
+     * Envoyer un lien de réinitialisation d'urgence
+     */
+    public function sendEmergencyResetLink(Request $request)
+    {
+        $request->validate([
+            'user_id' => 'required|exists:users,id',
+            'reason' => 'required|string|max:255',
+        ]);
+
+        $user = User::findOrFail($request->user_id);
+
+        // Logger l'action
+        PasswordResetLog::create([
+            'email' => $user->email,
+            'ip_address' => $request->ip(),
+            'user_agent' => $request->userAgent(),
+            'action' => 'emergency_link',
+            'status' => 'success',
+            'details' => [
+                'admin_user' => auth()->user()->email,
+                'reason' => $request->reason,
+                'timestamp' => now()->toISOString(),
+            ],
+        ]);
+
+        // Envoyer le lien de réinitialisation
+        $status = Password::sendResetLink(['email' => $user->email]);
+
+        if ($status === Password::RESET_LINK_SENT) {
+            return redirect()->route('users.emergency-reset')
+                ->with('success', "Lien de réinitialisation envoyé à {$user->name} ({$user->email}).");
+        }
+
+        return back()->withErrors(['email' => __($status)]);
+    }
+
+    /**
+     * Obtenir les statistiques de sécurité
+     */
+    public function getSecurityStats()
+    {
+        $stats = PasswordResetLog::getSecurityStats(30);
+        return response()->json($stats);
     }
 }

@@ -116,6 +116,12 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/users/roles/{role}/permissions', [UserManagementController::class, 'getRolePermissions'])->name('users.roles.permissions')->middleware('permission:manage-permissions');
     Route::put('/users/roles/{role}/permissions', [UserManagementController::class, 'updateRolePermissions'])->name('users.roles.update')->middleware('permission:manage-permissions');
     Route::patch('/users/{user}/toggle-status', [UserManagementController::class, 'toggleStatus'])->name('users.toggle-status')->middleware('permission:manage-users');
+    
+    // Routes pour réinitialisation d'urgence
+    Route::get('/users/emergency-reset', [UserManagementController::class, 'showEmergencyReset'])->name('users.emergency-reset')->middleware('permission:manage-users');
+    Route::post('/users/emergency-reset/password', [UserManagementController::class, 'emergencyPasswordReset'])->name('users.emergency-reset.password')->middleware('permission:manage-users');
+    Route::post('/users/emergency-reset/link', [UserManagementController::class, 'sendEmergencyResetLink'])->name('users.emergency-reset.link')->middleware('permission:manage-users');
+    Route::get('/users/security-stats', [UserManagementController::class, 'getSecurityStats'])->name('users.security-stats')->middleware('permission:manage-users');
 });
 
 //Categories
@@ -143,6 +149,23 @@ Route::middleware(['auth'])->group(function () {
     Route::resource('invoices', InvoiceController::class)->middleware('permission:manage-invoices');
     Route::get('invoices/{invoice}/print', [InvoiceController::class, 'print'])->name('invoices.print')->middleware('permission:view-sales');
     Route::get('invoices/{invoice}/download', [InvoiceController::class, 'download'])->name('invoices.download')->middleware('permission:view-sales');
+});
+
+// Quotes - Devis (Admin et Vendeurs uniquement)
+Route::middleware(['auth', 'permission:create-sales'])->group(function () {
+    Route::get('quotes', [App\Http\Controllers\QuoteController::class, 'index'])->name('quotes.index');
+    Route::get('quotes/create', [App\Http\Controllers\QuoteController::class, 'create'])->name('quotes.create');
+    Route::post('quotes', [App\Http\Controllers\QuoteController::class, 'store'])->name('quotes.store');
+    Route::get('quotes/{quote}', [App\Http\Controllers\QuoteController::class, 'show'])->name('quotes.show');
+    Route::get('quotes/{quote}/edit', [App\Http\Controllers\QuoteController::class, 'edit'])->name('quotes.edit');
+    Route::put('quotes/{quote}', [App\Http\Controllers\QuoteController::class, 'update'])->name('quotes.update');
+    Route::delete('quotes/{quote}', [App\Http\Controllers\QuoteController::class, 'destroy'])->name('quotes.destroy');
+    
+    // Actions spéciales
+    Route::get('quotes/{quote}/print', [App\Http\Controllers\QuoteController::class, 'print'])->name('quotes.print');
+    Route::get('quotes/{quote}/pdf', [App\Http\Controllers\QuoteController::class, 'downloadPdf'])->name('quotes.pdf');
+    Route::post('quotes/{quote}/convert', [App\Http\Controllers\QuoteController::class, 'convertToSale'])->name('quotes.convert');
+    Route::post('quotes/{quote}/duplicate', [App\Http\Controllers\QuoteController::class, 'duplicate'])->name('quotes.duplicate');
 });
 
 });

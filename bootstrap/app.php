@@ -16,9 +16,10 @@ return Application::configure(basePath: dirname(__DIR__))
             'user.status' => \App\Http\Middleware\CheckUserStatus::class,
         ]);
         
-        // Appliquer le middleware CheckUserStatus à toutes les routes authentifiées
+        // Appliquer les middlewares à toutes les routes authentifiées
         $middleware->web(append: [
             \App\Http\Middleware\CheckUserStatus::class,
+            \App\Http\Middleware\StockAlertNotifications::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {

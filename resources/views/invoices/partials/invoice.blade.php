@@ -5,14 +5,16 @@
     <meta charset="UTF-8">
     <title>Facture {{ $invoice->invoice_number }}</title>
     <style>
+        /* 🖨️ Style pour imprimante matricielle Epson LQ-350 */
         body {
-            font-family: monospace, sans-serif;
-            font-size: 12px;
-            max-width: 210mm;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 10px;
+            max-width: 80mm;
             margin: 0 auto;
-            padding: 20mm;
+            padding: 5mm;
             color: #000;
             background: white;
+            line-height: 1.3;
         }
         
         @media screen {
@@ -34,7 +36,10 @@
         @media print {
             body {
                 background: white;
-                padding: 20mm;
+                padding: 0;
+                margin: 0;
+                font-size: 9pt;
+                max-width: 72mm;
             }
             
             .invoice-container {
@@ -42,9 +47,15 @@
                 padding: 0;
                 box-shadow: none;
                 border-radius: 0;
+                max-width: 72mm;
             }
             
             .no-print { display: none !important; }
+            
+            /* Forcer police monospace pour matricielle */
+            * {
+                font-family: 'Courier New', Courier, monospace !important;
+            }
         }
 
         .center {
@@ -151,28 +162,56 @@
             margin: 20px 0;
         }
         
+        .header-section {
+            display: flex;
+            align-items: center;
+            margin-bottom: 10px;
+            gap: 10px;
+        }
+        
+        .header-logo {
+            flex-shrink: 0;
+        }
+        
+        .header-logo img {
+            max-height: 40px;
+            max-width: 80px;
+            height: auto;
+            width: auto;
+        }
+        
+        .header-text {
+            flex-grow: 1;
+            text-align: left;
+        }
+        
     </style>
 </head>
 
 <body>
     <div class="invoice-container">
-        <div class="center bold">
-            ETS GLASS LE BIEN CONSTRUCTION (EGBC)
+        <!-- Logo à gauche de l'en-tête -->
+        <div class="header-section">
+            <div class="header-logo">
+                <img src="{{ asset('images/logo.png') }}" alt="Logo EGBC">
+            </div>
+            <div class="header-text">
+                <div class="bold">ETS GLASS LE BIEN CONSTRUCTION (EGBC)</div>
+                <div style="font-size: 9px;">VITRERIE-MENUISERIE- ALUMINIUM</div>
+                <div style="font-size: 9px;">FABRICATION ET POSE DES OUVERTURES EN ALUMINIUM ET GRILLE DE PROTECTION ROULANTE <br>
+                                                                                                                SITUE A DOUALA (LENDI QUARTIER GENERAL )
+                                                                                                                </div>
+                <div style="font-size: 9px;">Tél: 657 91 9 30 / 670 51 71 34</div>
+            </div>
         </div>
-    <div class="center">
-        Agence PK19<br>
-        VITRERIE - MENUSERIE - ALUMINIUM<br>
-        Tél: 657 91 9 30 / 670 51 71 34
-    </div>
     <div class="center border-bottom">
         FACTURE N° {{ $invoice->invoice_number ?? 'N/A' }}<br>
-        Date:
         {{ $invoice->invoice_date ? \Illuminate\Support\Carbon::parse($invoice->invoice_date)->format('d/m/Y') : 'N/A' }}
     </div>
 
     <div class="bold">Client: {{ $invoice->client_name ?? 'N/A' }}</div>
-    @if (!empty($invoice->client_location))
-        <div>Adresse: {{ $invoice->client_location }}</div>
+    @if (!empty($invoice->client_phone))
+        <div>Tél: {{ $invoice->client_phone }}</div>
     @endif
     @if (!empty($invoice->vendor_name))
         <div class="bold" style="margin-top:4px;">Vendeur: <span class="normal">{{ $invoice->vendor_name }}</span></div>
@@ -210,15 +249,11 @@
     <div class="border-top"></div>
 
     @php
-        // Totals based on persisted invoice amount and currency
+        // Total basé sur le montant persisté de la facture
         $currency = $invoice->currency ?? 'FCFA';
         $total = (float) ($invoice->total_amount ?? $subtotal);
     @endphp
 
-    <div class="line">
-        <span>Sous-total:</span>
-        <span>{{ number_format($subtotal, 0, ',', ' ') }} {{ $currency }}</span>
-    </div>
     <div class="line total">
         <span>TOTAL:</span>
         <span>{{ number_format($total, 0, ',', ' ') }} {{ $currency }}</span>
@@ -226,7 +261,8 @@
 
     <div class="footer">
         Les articles vendus ne sont ni repris ni échangés.<br>
-        Merci pour votre confiance !
+        Merci pour votre confiance !<br><br>
+       
     </div>
 
     <div class="visa">

@@ -15,6 +15,7 @@
             border-bottom: 2px solid #3b82f6;
             padding-bottom: 10px;
         }
+       
         .header h1 {
             color: #3b82f6;
             margin: 0;
@@ -109,6 +110,7 @@
 </head>
 <body>
     <div class="header">
+        <!-- Logo de l'entreprise -->
         <h1>État des Stocks</h1>
         <p>Exporté le {{ $stats['export_date'] }}</p>
         <p>Total : {{ $stats['total_stocks'] }} produit(s) en stock</p>
@@ -192,7 +194,10 @@
     </table>
 
     <div class="footer">
-        <p>Document généré automatiquement par le système de gestion des ventes</p>
+        <p><strong>ETS GLASS LE BIEN CONSTRUCTION (EGBC)</strong></p>
+        <p>Agence PK19 - Vente des Vitres - aluminium -accessoires</p>
+        <p>Tél: 657 91 9 30 / 670 51 71 34</p>
+        <p>Document généré automatiquement le {{ date('d/m/Y à H:i') }}</p>
         <p>© {{ date('Y') }} - Tous droits réservés</p>
     </div>
 </body>

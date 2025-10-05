@@ -61,7 +61,38 @@
       </div>
       <div>
         <label class="block text-sm font-medium text-gray-700 mb-2">Motif</label>
-        <textarea name="motif" rows="3" class="w-full rounded-lg border border-gray-300 bg-gray-50 hover:bg-white focus:bg-white focus:outline-none focus:ring-0 focus:border-blue-500 transition-colors px-3 py-3" placeholder="Ex: Réception fournisseur, vente, ajustement..."></textarea>
+        
+        <!-- Motifs prédéfinis -->
+        <div class="mb-3">
+          <p class="text-xs text-gray-600 mb-2">Motifs fréquents :</p>
+          <div class="flex flex-wrap gap-2">
+            <button type="button" onclick="selectPredefinedMotif('Réapprovisionnement fournisseur')" class="px-3 py-1 text-xs bg-blue-100 text-blue-700 rounded-full hover:bg-blue-200 transition-colors">
+              📦 Réapprovisionnement
+            </button>
+            <button type="button" onclick="selectPredefinedMotif('Retour client')" class="px-3 py-1 text-xs bg-green-100 text-green-700 rounded-full hover:bg-green-200 transition-colors">
+              ↩️ Retour client
+            </button>
+            <button type="button" onclick="selectPredefinedMotif('Produit défectueux')" class="px-3 py-1 text-xs bg-red-100 text-red-700 rounded-full hover:bg-red-200 transition-colors">
+              ❌ Produit défectueux
+            </button>
+            <button type="button" onclick="selectPredefinedMotif('Inventaire physique')" class="px-3 py-1 text-xs bg-purple-100 text-purple-700 rounded-full hover:bg-purple-200 transition-colors">
+              📋 Inventaire
+            </button>
+            <button type="button" onclick="selectPredefinedMotif('Transfert entre magasins')" class="px-3 py-1 text-xs bg-orange-100 text-orange-700 rounded-full hover:bg-orange-200 transition-colors">
+              🚚 Transfert
+            </button>
+            <button type="button" onclick="selectPredefinedMotif('Échantillon gratuit')" class="px-3 py-1 text-xs bg-yellow-100 text-yellow-700 rounded-full hover:bg-yellow-200 transition-colors">
+              🎁 Échantillon
+            </button>
+            <button type="button" onclick="selectPredefinedMotif('Perte/Vol')" class="px-3 py-1 text-xs bg-gray-100 text-gray-700 rounded-full hover:bg-gray-200 transition-colors">
+              🚫 Perte/Vol
+            </button>
+          </div>
+        </div>
+        
+        <!-- Champ de saisie libre -->
+        <textarea id="motifTextarea" name="motif" rows="3" class="w-full rounded-lg border border-gray-300 bg-gray-50 hover:bg-white focus:bg-white focus:outline-none focus:ring-0 focus:border-blue-500 transition-colors px-3 py-3" placeholder="Sélectionnez un motif ci-dessus ou saisissez un motif personnalisé..."></textarea>
+        <p class="mt-1 text-xs text-gray-500">💡 Cliquez sur un motif prédéfini ou saisissez votre propre motif</p>
       </div>
 
       <div class="flex items-center justify-end gap-3">
@@ -98,6 +129,18 @@ function toggleFields() {
             input.checked = false;
         });
     }
+}
+
+function selectPredefinedMotif(motif) {
+    const textarea = document.getElementById('motifTextarea');
+    textarea.value = motif;
+    textarea.focus();
+    
+    // Animation visuelle pour indiquer la sélection
+    textarea.style.backgroundColor = '#dbeafe';
+    setTimeout(() => {
+        textarea.style.backgroundColor = '';
+    }, 500);
 }
 
 // Initialiser au chargement

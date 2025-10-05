@@ -13,7 +13,7 @@
                 </p>
             </div>
             
-            <!-- Filtres de période -->
+            <!-- Filtres de période et produit -->
             <div class="flex flex-wrap gap-2">
                 <form method="GET" action="{{ route('dashboard') }}" class="flex flex-wrap gap-2" id="periodForm">
                     <select name="period" onchange="toggleCustomDates()" class="px-3 py-2 border border-gray-300 rounded-lg text-sm">
@@ -29,6 +29,16 @@
                         <input type="date" name="start_date" value="{{ $start_date }}" class="px-3 py-2 border border-gray-300 rounded-lg text-sm">
                         <input type="date" name="end_date" value="{{ $end_date }}" class="px-3 py-2 border border-gray-300 rounded-lg text-sm">
                     </div>
+
+                    <!-- Filtre par produit -->
+                    <select name="product_id" class="px-3 py-2 border border-gray-300 rounded-lg text-sm min-w-[240px]">
+                        <option value="">🔎 Tous les produits</option>
+                        @foreach(($products_list ?? []) as $p)
+                            <option value="{{ $p->id }}" {{ (string)($product_id ?? '') === (string)$p->id ? 'selected' : '' }}>
+                                {{ $p->sku }} - {{ $p->nom }}
+                            </option>
+                        @endforeach
+                    </select>
                     
                     <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm hover:bg-blue-700">
                         Actualiser

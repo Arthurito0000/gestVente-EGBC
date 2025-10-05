@@ -6,6 +6,7 @@ use App\Http\Requests\StoreInvoiceRequest;
 use App\Models\Invoice;
 use App\Models\Movement;
 use App\Models\Product;
+use App\Models\Sale;
 use App\Models\Stock;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -45,7 +46,11 @@ class InvoiceController extends Controller
     public function create()
     {
         $products = Product::all();
-        return view('invoices.create', compact('products'));
+        
+        // Vérifier s'il y a des données de devis à convertir
+        $quoteData = session('quote_to_convert');
+        
+        return view('invoices.create', compact('products', 'quoteData'));
     }
 
     /**
@@ -65,6 +70,7 @@ class InvoiceController extends Controller
                 'invoice_date'    => $request->invoice_date,
                 'vendor_name'     => $request->vendor_name,
                 'client_name'     => $request->client_name,
+                'client_phone'    => $request->client_phone,
                 'client_location' => $request->client_location,
                 'currency'        => $request->currency ?? 'FCFA',
                 'total_amount'    => $request->total_amount,
@@ -114,17 +120,34 @@ class InvoiceController extends Controller
     
             DB::commit();
 
-             foreach ($request->lines as $line) {
+            // Créer les mouvements de stock et les ventes pour le dashboard
+            foreach ($request->lines as $line) {
+                // Créer le mouvement de stock
                 Movement::create([
                     'product_id' => $line['product_id'],
                     'type' => 'SORTIE',
                     'quantite' => $line['quantity'],
-                    'motif' => 'Vente',
+                    'motif' => 'Vente - Facture ' . $invoice->code,
                     'date' => now()
+                ]);
+
+                // Créer l'entrée de vente pour les statistiques du dashboard
+                Sale::create([
+                    'product_id' => $line['product_id'],
+                    'user_id' => auth()->id(),
+                    'quantite' => $line['quantity'],
+                    'prix_unitaire' => $line['unit_price'],
+                    'total' => $line['total_price'],
+                    'date_vente' => $request->invoice_date,
+                    'numero_facture' => $invoice->code,
+                    'notes' => 'Vente via facture ' . $invoice->code
                 ]);
             }
             Log::info('Transaction committed successfully');
     
+            // 🔴 BUG FIX A : Nettoyer la session après création de la facture
+            session()->forget('quote_to_convert');
+            
             // Load relations
             $invoice->load('products');
     

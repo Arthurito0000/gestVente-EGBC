@@ -79,4 +79,40 @@ class Sale extends Model
     {
         return $query->whereBetween('date_vente', [$startDate, $endDate]);
     }
+
+    /**
+     * Générer un numéro de facture unique
+     */
+    public static function generateNumeroFacture()
+    {
+        $today = Carbon::today();
+        $prefix = 'FAC-' . $today->format('Ymd') . '-';
+        
+        // Trouver le dernier numéro du jour
+        $lastSale = self::where('numero_facture', 'like', $prefix . '%')
+                        ->orderBy('id', 'desc')
+                        ->first();
+        
+        if ($lastSale) {
+            $lastNumber = (int) substr($lastSale->numero_facture, -3);
+            $newNumber = str_pad($lastNumber + 1, 3, '0', STR_PAD_LEFT);
+        } else {
+            $newNumber = '001';
+        }
+        
+        return $prefix . $newNumber;
+    }
+
+    /**
+     * Accessors pour formatage
+     */
+    public function getTotalFormatte()
+    {
+        return number_format($this->total, 0, ',', ' ') . ' Fcfa';
+    }
+
+    public function getPrixUnitaireFormatte()
+    {
+        return number_format($this->prix_unitaire, 0, ',', ' ') . ' Fcfa';
+    }
 }

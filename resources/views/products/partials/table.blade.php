@@ -34,13 +34,16 @@
               </svg>
             </a>
             
+            @can('edit-products')
             <!-- Modifier -->
             <a href="{{ route('products.edit', $product) }}" class="p-2 text-blue-700 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors" title="Modifier le produit">
               <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
               </svg>
             </a>
+            @endcan
             
+            @can('delete-products')
             <!-- Supprimer -->
             <form action="{{ route('products.destroy', $product) }}" method="POST" class="inline delete-form">
               @csrf
@@ -51,13 +54,19 @@
                 </svg>
               </button>
             </form>
+            @endcan
           </div>
         </td>
       </tr>
       @empty
       <tr>
-        <td colspan="5" class="px-4 py-8 text-center text-gray-500">
-          Aucun produit trouvé. <a href="{{ route('products.create') }}" class="text-primary-700 hover:text-primary-600">Créer le premier produit</a>
+        <td colspan="6" class="px-4 py-8 text-center text-gray-500">
+          Aucun produit trouvé. 
+          @can('create-products')
+          <a href="{{ route('products.create') }}" class="text-primary-700 hover:text-primary-600">Créer le premier produit</a>
+          @else
+          Contactez un administrateur pour créer des produits.
+          @endcan
         </td>
       </tr>
       @endforelse
@@ -68,28 +77,14 @@
 <!-- Pagination -->
 @if($products->hasPages())
   <div class="px-6 py-4 border-t border-gray-200" id="pagination-container">
-    <style>
-      /* Styles personnalisés pour la pagination bleue */
-      .pagination .page-link {
-        color: #3b82f6 !important;
-        border-color: #e5e7eb !important;
-      }
-      .pagination .page-link:hover {
-        color: #1d4ed8 !important;
-        background-color: #eff6ff !important;
-        border-color: #3b82f6 !important;
-      }
-      .pagination .page-item.active .page-link {
-        background-color: #3b82f6 !important;
-        border-color: #3b82f6 !important;
-        color: white !important;
-      }
-      .pagination .page-item.disabled .page-link {
-        color: #9ca3af !important;
-        background-color: #f9fafb !important;
-        border-color: #e5e7eb !important;
-      }
-    </style>
-    {{ $products->links() }}
+    <div class="flex items-center justify-between">
+      <div class="text-sm text-gray-700">
+        Affichage de {{ $products->firstItem() }} à {{ $products->lastItem() }} sur {{ $products->total() }} résultats
+      </div>
+      <div class="pagination-links">
+        {{ $products->links('vendor.pagination.simple-tailwind') }}
+      </div>
+    </div>
   </div>
 @endif
+

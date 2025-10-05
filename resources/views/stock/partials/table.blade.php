@@ -5,11 +5,15 @@
         <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Produit</th>
         <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">SKU</th>
         <th class="px-4 py-2 text-center text-xs font-medium text-gray-500 uppercase">Catégorie</th>
+        @if(auth()->user()->hasRole(['Administrateur', 'Gérant de Stock']))
         <th class="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase">Prix d'achat</th>
+        @endif
         <th class="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase">Qte Stock</th>
         <th class="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase">Seuil</th>
         <th class="px-4 py-2 text-center text-xs font-medium text-gray-500 uppercase">Statut</th>
+        @if(auth()->user()->hasRole(['Administrateur', 'Gérant de Stock']))
         <th class="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase">Valeur Stock</th>
+        @endif
         <th class="px-4 py-2 text-center text-xs font-medium text-gray-500 uppercase">Actions</th>
       </tr>
     </thead>
@@ -27,9 +31,11 @@
             <span class="text-gray-400">Non définie</span>
           @endif
         </td>
+        @if(auth()->user()->hasRole(['Administrateur', 'Gérant de Stock']))
         <td class="px-4 py-2 text-sm text-right font-medium text-gray-900">
           {{ number_format($stock->product->prix_achat, 0, ',', ' ') }} Fcfa
         </td>
+        @endif
         <td class="px-4 py-2 text-sm text-right font-medium {{ $stock->quantite <= $stock->seuil ? ($stock->quantite == 0 ? 'text-red-600' : 'text-orange-600') : 'text-gray-900' }}">
           {{ $stock->quantite }}
         </td>
@@ -49,9 +55,11 @@
             </span>
           @endif
         </td>
+        @if(auth()->user()->hasRole(['Administrateur', 'Gérant de Stock']))
         <td class="px-4 py-2 text-sm text-right font-medium text-gray-900">
           {{ number_format($stock->quantite * $stock->product->prix_achat, 0, ',', ' ') }} Fcfa
         </td>
+        @endif
         <td class="px-4 py-2 text-center">
           <!-- Supprimer le stock -->
           <button onclick="confirmDeleteStock({{ $stock->id }}, '{{ $stock->product->nom }}')" 
@@ -65,7 +73,7 @@
       </tr>
       @empty
       <tr>
-        <td colspan="9" class="px-4 py-8 text-center text-gray-500">
+        <td colspan="{{ auth()->user()->hasRole(['Administrateur', 'Gérant de Stock']) ? '9' : '7' }}" class="px-4 py-8 text-center text-gray-500">
           @if(request('search'))
             Aucun stock trouvé pour "{{ request('search') }}". 
             <a href="{{ route('stock.index') }}" class="text-primary-700 hover:text-primary-600">Voir tous les stocks</a>
@@ -88,32 +96,10 @@
           Affichage de {{ $stocks->firstItem() }} à {{ $stocks->lastItem() }} sur {{ $stocks->total() }} résultats
         </div>
         <div class="pagination-links">
-          {{ $stocks->links('pagination::tailwind') }}
+          {{ $stocks->links('vendor.pagination.simple-tailwind') }}
         </div>
       </div>
     </div>
   @endif
 </div>
 
-<style>
-/* Styles pour la pagination bleue */
-.pagination-links .relative {
-  @apply inline-flex items-center;
-}
-
-.pagination-links a, .pagination-links span {
-  @apply px-3 py-2 text-sm leading-tight text-gray-500 bg-white border border-gray-300 hover:bg-blue-50 hover:text-blue-600;
-}
-
-.pagination-links .bg-blue-50 {
-  @apply bg-blue-600 text-white border-blue-600;
-}
-
-.pagination-links a:first-child, .pagination-links span:first-child {
-  @apply rounded-l-lg;
-}
-
-.pagination-links a:last-child, .pagination-links span:last-child {
-  @apply rounded-r-lg;
-}
-</style>

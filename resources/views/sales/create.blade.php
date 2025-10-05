@@ -15,7 +15,84 @@
         </div>
     </div>
 
-    <!-- Formulaire de vente -->
+    @if(isset($quoteData))
+    <!-- Message d'information sur le devis -->
+    <div class="bg-blue-50 border-l-4 border-blue-500 rounded-lg p-6">
+        <div class="flex items-start">
+            <svg class="w-6 h-6 text-blue-500 mr-3 mt-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+            </svg>
+            <div class="flex-1">
+                <h3 class="text-lg font-semibold text-blue-900 mb-2">📋 Conversion du devis {{ $quoteData['quote_numero'] }}</h3>
+                <p class="text-blue-700 mb-1"><strong>Client :</strong> {{ $quoteData['client_nom'] }}</p>
+                <p class="text-blue-700 mb-3"><strong>Nombre d'articles :</strong> {{ count($quoteData['items']) }}</p>
+                <p class="text-sm text-blue-600">
+                    ℹ️ Les données du devis sont pré-remplies ci-dessous. Validez chaque vente pour créer les factures.
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Liste des articles du devis -->
+    <div class="bg-white rounded-2xl shadow-md p-6">
+        <h2 class="text-xl font-bold text-gray-900 mb-4">Articles du devis à facturer</h2>
+        <div class="space-y-4">
+            @foreach($quoteData['items'] as $index => $item)
+            <div class="border-2 border-gray-200 rounded-lg p-4 hover:border-blue-500 transition">
+                <form method="POST" action="{{ route('sales.store') }}" class="grid grid-cols-1 md:grid-cols-5 gap-4 items-end">
+                    @csrf
+                    <input type="hidden" name="from_quote" value="{{ $quoteData['quote_id'] }}">
+                    
+                    <div class="md:col-span-2">
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Produit</label>
+                        <input type="hidden" name="product_id" value="{{ $item['product_id'] }}">
+                        <input type="text" value="{{ $item['designation'] }}" readonly
+                               class="w-full px-3 py-2 bg-gray-50 border border-gray-300 rounded-lg">
+                        <p class="text-xs text-gray-500 mt-1">
+                            Stock disponible: {{ $item['product']->stock->quantite ?? 0 }}
+                        </p>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Quantité</label>
+                        <input type="number" name="quantite" value="{{ $item['quantite'] }}" min="1" 
+                               max="{{ $item['product']->stock->quantite ?? 0 }}" required
+                               class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Prix unitaire</label>
+                        <input type="number" name="prix_unitaire" value="{{ $item['prix_unitaire'] }}" 
+                               step="0.01" min="0" required readonly
+                               class="w-full px-3 py-2 bg-gray-50 border border-gray-300 rounded-lg">
+                    </div>
+
+                    <div>
+                        <button type="submit" 
+                                class="w-full bg-green-600 hover:bg-green-700 text-white font-semibold py-2 px-4 rounded-lg transition duration-200">
+                            ✓ Valider
+                        </button>
+                    </div>
+                </form>
+            </div>
+            @endforeach
+        </div>
+        
+        <div class="mt-6 p-4 bg-gray-50 rounded-lg">
+            <p class="text-sm text-gray-700">
+                <strong>💡 Astuce :</strong> Chaque article sera transformé en une facture distincte. Validez les un par un ou ajustez les quantités si nécessaire.
+            </p>
+            <form action="{{ route('sales.index') }}" method="GET" class="mt-3">
+                <button type="submit" 
+                        onclick="sessionStorage.clear()"
+                        class="text-blue-600 hover:text-blue-800 font-semibold">
+                    ← Retour aux ventes (annuler la conversion)
+                </button>
+            </form>
+        </div>
+    </div>
+    @else
+    <!-- Formulaire de vente normal -->
     <div class="bg-white rounded-2xl shadow-md p-6">
         <form method="POST" action="{{ route('sales.store') }}" id="saleForm">
             @csrf
@@ -153,6 +230,7 @@
             </div>
         </form>
     </div>
+    @endif
 </div>
 
 <script>

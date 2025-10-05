@@ -29,10 +29,8 @@ class CheckUserStatus
                 $request->session()->invalidate();
                 $request->session()->regenerateToken();
                 
-                // Rediriger vers la page de connexion avec un message d'erreur
-                return redirect()->route('login')->withErrors([
-                    'email' => 'Votre compte a été désactivé. Veuillez contacter l\'administrateur.'
-                ]);
+                // Rediriger vers la page de connexion avec un message d'erreur (compatible Toastr)
+                return redirect()->route('login')->with('error', 'Votre compte a été désactivé. Veuillez contacter l\'administrateur.');
             }
         }
         

@@ -8,6 +8,8 @@
     <title>{{ $title ?? 'Stock Manager' }}</title>
     <!-- TailwindCSS via CDN for guaranteed styling -->
     <script src="https://cdn.tailwindcss.com"></script>
+
+    @vite(['resources/css/app.css', 'resources/js/app.js'])
     <!-- Alpine.js pour les interactions -->
     <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
     <script>

@@ -124,11 +124,11 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/users/security-stats', [UserManagementController::class, 'getSecurityStats'])->name('users.security-stats')->middleware('permission:manage-users');
 });
 
-//Categories
-Route::prefix('categories')->name('categories.')->group(function () {
-    Route::get('/', [CategoryController::class, 'index'])->name('index');
-    Route::post('/', [CategoryController::class, 'store'])->name('store');
-});
+// Categories - RESTful routes
+Route::resource('categories', CategoryController::class)->except(['create', 'edit']);
+
+// Additional custom routes for categories can be added here if needed
+Route::get('/categories/category/{category}', [CategoryController::class, 'show'])->name('categories.show');
 
 // Sales - Gestion des ventes avec vérification de stock
 Route::middleware(['auth'])->group(function () {

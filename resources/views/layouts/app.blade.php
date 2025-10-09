@@ -6,35 +6,18 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>{{ $title ?? 'Stock Manager' }}</title>
-    <!-- TailwindCSS via CDN for guaranteed styling -->
-    {{-- @vite(['resources/css/app.css', 'resources/js/app.js']) --}}
 
-    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- @vite(['resources/css/app.css', 'resources/js/app.js']) -->
+    <!-- TailwindCSS via CDN for guaranteed styling -->
+    @vite(['resources/css/app.css', 'resources/js/app.js'])
+
+    <!-- <script src="https://cdn.tailwindcss.com"></script> -->
 
     <!-- Alpine.js pour les interactions -->
     <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    colors: {
-                        primary: {
-                            50: '#EFF6FF',
-                            100: '#DBEAFE',
-                            200: '#BFDBFE',
-                            300: '#93C5FD',
-                            400: '#60A5FA',
-                            500: '#3B82F6',
-                            600: '#2563EB',
-                            700: '#1D4ED8',
-                            800: '#1E40AF',
-                            900: '#1E3A8A',
-                        },
-                    }
-                }
-            }
-        }
-    </script>
+    <link rel="stylesheet" href="{{ asset('css/vendor/choices.min.css') }}">
+
+   
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link
@@ -42,13 +25,13 @@
         rel="stylesheet">
 
     <!-- Toastr CSS -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css">
+    <!-- <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css"> -->
 
     <!-- jQuery (requis pour Toastr) -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+    <!-- <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script> -->
 
     <!-- Toastr JS -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
+    <!-- <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script> -->
 
     <!-- Searchable Select Component -->
     <script src="{{ asset('js/searchable-select.js') }}"></script>
@@ -56,7 +39,7 @@
     <style>
         :root {
             --sidebar-expanded: 16rem;
-            --sidebar-collapsed: 4.5rem;
+            --sidebar-collapsed: 5rem;
         }
 
         .font-heading {
@@ -67,31 +50,42 @@
             font-family: 'Nunito', sans-serif;
         }
 
-        /* Collapsed sidebar behavior */
-        #sidebar.collapsed {
-            width: var(--sidebar-collapsed) !important;
-        }
+       /* Collapsed sidebar behavior */
+#sidebar.collapsed {
+    width: var(--sidebar-collapsed) !important;
+}
 
-        #sidebar.collapsed #brand-text {
-            display: none !important;
-        }
+#sidebar.collapsed #brand-text {
+    display: none !important;
+}
 
-        #sidebar.collapsed .nav-label {
-            display: none !important;
-        }
+#sidebar.collapsed .nav-label {
+    display: none !important;
+}
 
-        #sidebar.collapsed .section-label {
-            display: none !important;
-        }
+#sidebar.collapsed .section-label {
+    display: none !important;
+}
 
-        #sidebar.collapsed nav a {
-            justify-content: center;
-            gap: 0;
-        }
+#sidebar.collapsed nav a {
+    justify-content: center;
+    gap: 0;
+}
 
-        #sidebar nav a {
-            transition: padding 200ms, gap 200ms;
-        }
+#sidebar nav a {
+    transition: padding 200ms, gap 200ms;
+}
+
+/* 🔴 AJOUTEZ CETTE NOUVELLE RÈGLE */
+#sidebar.collapsed ~ #main-content {
+    padding-left: var(--sidebar-collapsed) !important;
+}
+
+#sidebar.collapsed ~ #main-content header {
+    margin-left: var(--sidebar-collapsed) !important;
+}
+        
+
 
         /* 🔴 BUG FIX C - Alpine.js x-cloak pour éviter flash de contenu */
         [x-cloak] {
@@ -208,10 +202,55 @@
             height: 1.25rem;
             width: 1.25rem;
         }
+        
+        /* Responsive adjustments for mobile */
+        @media (max-width: 1023px) { /* lg breakpoint */
+            #main-content {
+                padding-left: 0 !important;
+            }
+            
+            #main-content header {
+                margin-left: 0 !important;
+            }
+            
+            #sidebar {
+                position: fixed;
+                z-index: 50;
+                transform: translateX(-100%);
+                transition: transform 0.3s ease;
+            }
+            
+            #sidebar:not(.hidden) {
+                transform: translateX(0);
+            }
+            
+            #sidebar ~ #main-content {
+                padding-left: 0 !important;
+            }
+            
+            #sidebar ~ #main-content header {
+                margin-left: 0 !important;
+            }
+            
+            .main-content-expanded {
+                margin-left: 0 !important;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            main {
+                padding: 1rem 0.5rem 1rem 0.5rem !important;
+            }
+            
+            .container {
+                padding-left: 0.5rem;
+                padding-right: 0.5rem;
+            }
+        }
     </style>
 </head>
 
-<body class="font-body bg-white text-gray-700">
+<body class="font-body bg-white text-gray-700 @auth data-user-authenticated @endauth">
     <div class="min-h-screen flex">
         <!-- Sidebar -->
         <aside id="sidebar"
@@ -310,8 +349,7 @@
                                 <div class="text-xs uppercase tracking-wider text-white/70 px-3 pt-4 pb-1 section-label">Ventes
                                 </div>
 
-                                @can('create-sales')
-                                    @if (!auth()->user()->isSalesManager())
+                                @can('manage-quotes')
                                         <a href="{{ route('quotes.index') }}"
                                             class="group flex items-center gap-x-3 px-3 py-2 rounded-lg hover:bg-white/10 {{ request()->routeIs('quotes.*') ? 'bg-white/10' : '' }}">
                                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -320,7 +358,6 @@
                                             </svg>
                                             <span class="truncate nav-label">Devis</span>
                                         </a>
-                                    @endif
                                 @endcan
 
                                 <a href="{{ route('invoices.index') }}"
@@ -382,13 +419,12 @@
         </aside>
 
         <!-- Main area -->
-        <div class="flex-1 lg:pl-64">
+<div id="main-content" class="flex-1 transition-all duration-300" style="padding-left: var(--sidebar-expanded);">
             <!-- Top bar -->
             <header
-                class="h-16 flex items-center justify-between px-4 border-b bg-white/80 backdrop-blur supports-[backdrop-filter]:bg-white/60">
+            class="h-16 flex items-center justify-between px-4 border-b border-gray-100 shadow-sm bg-white/80 backdrop-blur supports-[backdrop-filter]:bg-white/60 fixed top-0 right-0 left-0 z-40 transition-all duration-300" style="margin-left: var(--sidebar-expanded);">
                 <div class="flex items-center gap-3">
-                    <button class="lg:hidden p-2 rounded border"
-                        onclick="document.getElementById('sidebar').classList.toggle('hidden')">
+                    <button id="mobile-menu-button" class="lg:hidden p-2 rounded border">
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                 d="M4 6h16M4 12h16M4 18h16" />
@@ -416,7 +452,7 @@
                             </div>
                         @endcan
 
-                        <div class="hidden md:flex items-center gap-2 px-3 py-1.5 rounded-full border">
+                        <div class="hidden md:flex items-center gap-2 px-3 py-1.5 rounded-full border border-gray-200">
                             <span class="w-2 h-2 rounded-full bg-green-500"></span>
                             <span class="text-sm">Online</span>
                         </div>
@@ -450,9 +486,9 @@
                                 x-transition:leave="transition ease-in duration-75"
                                 x-transition:leave-start="opacity-100 scale-100"
                                 x-transition:leave-end="opacity-0 scale-95"
-                                class="dropdown-menu absolute right-0 mt-2 w-64 bg-white rounded-lg shadow-lg border py-2"
+                                class="dropdown-menu absolute right-0 mt-2 w-64 bg-white rounded-lg shadow-lg border border-gray-200 py-2"
                                 style="z-index: 99999 !important; position: absolute !important; display: none;">
-                                <div class="px-4 py-3 border-b">
+                                <div class="px-4 py-3 border-b border-gray-200">
                                     <div class="flex items-center gap-3">
                                         <div
                                             class="w-10 h-10 rounded-full bg-primary-600 text-white flex items-center justify-center font-heading">
@@ -483,21 +519,20 @@
                                     {{-- Paramètres temporairement masqué - fonctionnalité non implémentée
                                 <a href="#" class="flex items-center gap-3 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path>
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37.996.608 2.296.07 2.572-1.065z"></path>
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
                                     </svg>
                                     Paramètres
                                 </a>
                                 --}}
 
-                                    <div class="border-t my-2"></div>
+                                    <div class="border-t my-2 border-gray-100"></div>
 
-                                    <form method="POST" action="{{ route('logout') }}">
+                                    <form method="POST" action="{{ route('logout') }}" id="logoutForm">
                                         @csrf
                                         <button type="submit"
                                             class="flex items-center gap-3 px-4 py-2 text-sm text-red-600 hover:bg-red-50 w-full text-left">
-                                            <svg class="w-4 h-4" fill="none" stroke="currentColor"
-                                                viewBox="0 0 24 24">
+                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                                     d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1">
                                                 </path>
@@ -513,11 +548,11 @@
             </header>
 
             <!-- Modal de notifications -->
-            <div id="notificationModal" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden">
+            <div id="notificationModal" class="fixed inset-0 bg-white/80 backdrop-blur supports-[backdrop-filter]:bg-white/60  z-50 hidden">
                 <div class="flex items-start justify-center min-h-screen pt-16 px-4">
                     <div class="bg-white rounded-2xl shadow-xl max-w-2xl w-full max-h-[80vh] overflow-hidden">
                         <!-- En-tête du modal -->
-                        <div class="flex items-center justify-between p-6 border-b">
+                        <div class="flex items-center justify-between p-6 border-b border-gray-200">
                             <div class="flex items-center gap-3">
                                 <div class="p-2 bg-red-100 rounded-lg">
                                     <svg class="w-6 h-6 text-red-600" fill="none" stroke="currentColor"
@@ -553,7 +588,7 @@
                         </div>
 
                         <!-- Pied du modal -->
-                        <div class="px-6 py-4 bg-gray-50 border-t">
+                        <div class="px-6 py-4 bg-gray-50 border-t border-gray-200">
                             <div class="flex items-center justify-between">
                                 <p class="text-sm text-gray-500">
                                     Dernière mise à jour : <span id="lastUpdateTime">-</span>
@@ -568,7 +603,7 @@
                 </div>
             </div>
 
-            <main class="p-6">
+            <main class="px-4 pb-6 pt-24">
                 @yield('content')
             </main>
         </div>
@@ -582,50 +617,22 @@
 
         function toggleSidebar() {
             const isCollapsed = sidebar.classList.toggle('collapsed');
+            const mainContent = document.getElementById('main-content');
+            
             if (isCollapsed) {
                 collapseIcon.style.transform = 'rotate(180deg)';
+                mainContent.style.paddingLeft = 'var(--sidebar-collapsed)';
             } else {
                 collapseIcon.style.transform = 'rotate(0deg)';
+                mainContent.style.paddingLeft = 'var(--sidebar-expanded)';
             }
         }
 
         collapseBtnBottom?.addEventListener('click', toggleSidebar);
 
         // Configuration Toastr
-        toastr.options = {
-            "closeButton": true,
-            "debug": false,
-            "newestOnTop": true,
-            "progressBar": true,
-            "positionClass": "toast-top-right",
-            "preventDuplicates": false,
-            "onclick": null,
-            "showDuration": "300",
-            "hideDuration": "1000",
-            "timeOut": "5000",
-            "extendedTimeOut": "1000",
-            "showEasing": "swing",
-            "hideEasing": "linear",
-            "showMethod": "fadeIn",
-            "hideMethod": "fadeOut"
-        };
-
-        // Affichage des messages de session
-        @if (session('success'))
-            toastr.success('{{ session('success') }}');
-        @endif
-
-        @if (session('error'))
-            toastr.error('{{ session('error') }}');
-        @endif
-
-        @if (session('warning'))
-            toastr.warning('{{ session('warning') }}');
-        @endif
-
-        @if (session('info'))
-            toastr.info('{{ session('info') }}');
-        @endif
+       
+       
 
         // Système de notifications
         document.addEventListener('DOMContentLoaded', function() {
@@ -826,11 +833,62 @@
         });
     </script>
 
+@if (session('success') || session('error') || session('warning') || session('info'))
+    <script>
+        window.addEventListener('load', function() {
+            console.log('Window loaded, toastr:', typeof window.toastr); // Debug
+            
+            @if (session('success'))
+                window.toastr.success('{{ session('success') }}');
+            @endif
+
+            @if (session('error'))
+                window.toastr.error('{{ session('error') }}');
+            @endif
+
+            @if (session('warning'))
+                window.toastr.warning('{{ session('warning') }}');
+            @endif
+
+            @if (session('info'))
+                window.toastr.info('{{ session('info') }}');
+            @endif
+        });
+    </script>
+@endif
+<script src="{{ asset('js/vendor/choices.min.js') }}"></script>
+
+<script>
+document.getElementById('logoutForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    fetch('{{ route('logout') }}', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+            'Accept': 'application/json'
+        },
+        credentials: 'same-origin'
+    })
+    .then(response => {
+        // Rediriger vers login peu importe la réponse
+        window.location.href = '{{ route('login') }}';
+    })
+    .catch(error => {
+        // En cas d'erreur (y compris 419), rediriger quand même
+        window.location.href = '{{ route('login') }}';
+    });
+});
+</script>
+
     <!-- Alertes de stock globales -->
     @include('components.stock-alerts')
 
     <!-- Scripts personnalisés des pages -->
     @stack('scripts')
+
+
 </body>
 
 </html>

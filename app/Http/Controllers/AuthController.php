@@ -21,6 +21,7 @@ class AuthController extends Controller
         }
         return view('auth.login');
     }
+
     public function login(Request $request)
     {
        $credentials = $request->validate([
@@ -40,7 +41,9 @@ class AuthController extends Controller
        if (Auth::attempt($credentials)) {
            $request->session()->regenerate();
 
-           return redirect()->intended('dashboard');
+           // 🔥 FIX ULTIME : Redirection FORCÉE vers le dashboard avec route() helper
+           // Évite tout conflit avec les requêtes AJAX des notifications
+           return redirect()->route('dashboard');
        }
 
        return back()->withInput($request->only('email'))
@@ -48,13 +51,18 @@ class AuthController extends Controller
     }
 
     public function logout(Request $request)
-    {
-        Auth::logout();
-        $request->session()->invalidate();
-        $request->session()->regenerateToken();
-        return redirect()->route('login')->with('success', 'Vous avez été déconnecté.');
-
+{
+    // Vérifier si l'utilisateur est déjà déconnecté
+    if (!Auth::check()) {
+        return redirect()->route('login')->with('info', 'Vous êtes déjà déconnecté.');
     }
+
+    Auth::logout();
+    $request->session()->invalidate();
+    $request->session()->regenerateToken();
+    
+    return redirect()->route('login')->with('success', 'Vous avez été déconnecté.');
+}
 
     // Show the email form to request a password reset link
     public function showEmailVerificationForm()

@@ -165,7 +165,7 @@
 </div>
 
 <!-- Graphiques et analyses -->
-<div class="grid grid-cols-1 xl:grid-cols-2 gap-6 mb-6">
+<div class="grid grid-cols-1 xl:grid-cols-2 gap-6 mb-6"> 
     <!-- Top produits -->
     <div class="bg-white rounded-2xl shadow-md p-6">
         <h3 class="text-lg font-semibold text-gray-900 mb-4">🥇 Produits les plus vendus</h3>

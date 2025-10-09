@@ -20,6 +20,9 @@ class Invoice extends Model
     protected $casts = [
         'invoice_date' => 'date',
         'total_amount' => 'decimal:2',
+        'quantity' => 'decimal:3',  // ← AJOUTER CECI
+        'unit_price' => 'decimal:2',
+        'total_price' => 'decimal:2',
     ];
 
     public function products()

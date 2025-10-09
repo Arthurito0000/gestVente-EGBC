@@ -32,7 +32,7 @@ class StoreInvoiceRequest extends FormRequest
 
             'lines' => 'required|array|min:1',
             'lines.*.product_id' => 'required|exists:products,id',
-            'lines.*.quantity' => 'required|numeric|min:1',
+            'lines.*.quantity' => 'required|string|regex:/^(\d+\.?\d*)(\/\d+\.?\d*)?$/',
             'lines.*.unit_price' => 'required|numeric|min:0',
             'lines.*.total_price' => 'required|numeric|min:0',
         ];
@@ -49,7 +49,7 @@ class StoreInvoiceRequest extends FormRequest
             'lines.required' => 'Vous devez ajouter au moins une ligne de produit.',
             'lines.*.product_id.required' => 'Sélectionnez un produit.',
             'lines.*.product_id.exists' => 'Le produit sélectionné est invalide.',
-            'lines.*.quantity.min' => 'La quantité doit être d\'au moins 1.',
+            'lines.*.quantity.regex' => 'Le format de la quantité est invalide. Utilisez un nombre ou une fraction (ex: 1, 1/2, 2.5).',
         ];
     }
 }

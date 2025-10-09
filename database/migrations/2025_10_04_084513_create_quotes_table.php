@@ -29,7 +29,7 @@ return new class extends Migration
             $table->foreignId('quote_id')->constrained()->onDelete('cascade');
             $table->foreignId('product_id')->constrained()->onDelete('cascade');
             $table->string('designation');
-            $table->integer('quantite');
+            $table->decimal('quantite', 10, 3);
             $table->decimal('prix_unitaire', 10, 2);
             $table->decimal('prix_total', 10, 2);
             $table->timestamps();

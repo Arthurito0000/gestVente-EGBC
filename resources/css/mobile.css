@@ -1,0 +1,195 @@
+/* Mobile-specific styles for better responsive design */
+
+/* Small devices (landscape phones, 576px and up) */
+@media (max-width: 576px) {
+  /* Adjust form elements for better mobile experience */
+  .form-control {
+    padding: 0.5rem 0.75rem;
+    font-size: 0.875rem;
+  }
+  
+  .btn {
+    padding: 0.5rem 1rem;
+    font-size: 0.875rem;
+  }
+  
+  /* Adjust table display for mobile */
+  .table-responsive {
+    font-size: 0.75rem;
+  }
+  
+  .table-responsive thead th,
+  .table-responsive tbody td {
+    padding: 0.5rem 0.25rem;
+  }
+  
+  /* Adjust card padding */
+  .card {
+    padding: 1rem;
+  }
+  
+  /* Adjust navigation for mobile */
+  .navbar-nav .nav-link {
+    padding: 0.5rem 0.75rem;
+  }
+  
+  /* Adjust input fields */
+  input, select, textarea {
+    padding: 0.5rem 0.75rem;
+    font-size: 0.875rem;
+  }
+  
+  /* Adjust button sizes */
+  .btn-sm {
+    padding: 0.25rem 0.5rem;
+    font-size: 0.75rem;
+  }
+  
+  .btn-lg {
+    padding: 0.75rem 1.5rem;
+    font-size: 1rem;
+  }
+}
+
+/* Extra small devices (portrait phones, less than 576px) */
+@media (max-width: 480px) {
+  /* Further adjustments for very small screens */
+  .container {
+    padding-left: 0.5rem;
+    padding-right: 0.5rem;
+  }
+  
+  .form-group {
+    margin-bottom: 0.75rem;
+  }
+  
+  /* Adjust table for very small screens */
+  .table-responsive {
+    font-size: 0.7rem;
+  }
+  
+  .table-responsive thead th,
+  .table-responsive tbody td {
+    padding: 0.25rem 0.125rem;
+  }
+  
+  /* Adjust card elements */
+  .card-header,
+  .card-body,
+  .card-footer {
+    padding: 0.75rem;
+  }
+  
+  /* Adjust modal for small screens */
+  .modal-dialog {
+    margin: 0.5rem;
+  }
+  
+  .modal-content {
+    padding: 0.5rem;
+  }
+  
+  /* Adjust alert messages */
+  .alert {
+    padding: 0.75rem;
+    font-size: 0.8rem;
+  }
+}
+
+/* Medium devices (tablets, 768px and up) */
+@media (max-width: 768px) {
+  /* Adjust grid layouts */
+  .row {
+    margin-left: -0.5rem;
+    margin-right: -0.5rem;
+  }
+  
+  .col,
+  .col-1,
+  .col-2,
+  .col-3,
+  .col-4,
+  .col-5,
+  .col-6,
+  .col-7,
+  .col-8,
+  .col-9,
+  .col-10,
+  .col-11,
+  .col-12,
+  .col-auto {
+    padding-left: 0.5rem;
+    padding-right: 0.5rem;
+  }
+  
+  /* Adjust form layouts */
+  .form-row {
+    margin-left: -0.5rem;
+    margin-right: -0.5rem;
+  }
+  
+  .form-row > .col,
+  .form-row > [class*="col-"] {
+    padding-left: 0.5rem;
+    padding-right: 0.5rem;
+  }
+  
+  /* Adjust navigation */
+  .navbar-collapse {
+    padding: 0.5rem 0;
+  }
+  
+  /* Adjust pagination */
+  .pagination .page-link {
+    padding: 0.5rem 0.75rem;
+    font-size: 0.875rem;
+  }
+}
+
+/* Hide elements on mobile for better UX */
+@media (max-width: 768px) {
+  .desktop-only {
+    display: none !important;
+  }
+}
+
+/* Show mobile-specific elements */
+@media (max-width: 768px) {
+  .mobile-only {
+    display: block !important;
+  }
+}
+
+@media (min-width: 769px) {
+  .mobile-only {
+    display: none !important;
+  }
+}
+
+/* Adjust dropdown menus for touch devices */
+@media (max-width: 768px) {
+  .dropdown-menu {
+    min-width: 200px;
+  }
+  
+  .dropdown-item {
+    padding: 0.75rem 1rem;
+    font-size: 1rem;
+  }
+}
+
+/* Improve touch targets for mobile */
+@media (max-width: 768px) {
+  a, button, input, select, textarea {
+    min-height: 44px;
+    min-width: 44px;
+  }
+  
+  .btn {
+    min-height: 44px;
+  }
+  
+  .form-control {
+    min-height: 44px;
+  }
+}

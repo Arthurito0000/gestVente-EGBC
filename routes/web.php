@@ -5,167 +5,205 @@ use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\SaleController;
 use App\Http\Controllers\UserManagementController;
-// use App\Http\Controllers\InvoiceController; // duplicate removed
-use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\InvoiceController;
+use Illuminate\Support\Facades\Route;
 
-// Redirect root to login for now (frontend only)
-Route::get('/', function () { return redirect()->route('login'); });
+// Redirection root vers login
+Route::get('/', function () { 
+    return redirect()->route('login'); 
+});
 
-// Auth (frontend-only)
-Route::get('/login', function () { return view('auth.login'); })->name('login');
-
-// Auth routes
+// ============================================
+// AUTH ROUTES - SANS MIDDLEWARE GUEST
+// ============================================
 Route::get('/login', [AuthController::class, 'showLoginForm'])->name('login');
 Route::post('/login', [AuthController::class, 'login'])->name('login.post');
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
-// Request reset link (email form)
+
+// Réinitialisation mot de passe
 Route::get('/email/verify', [AuthController::class, 'showEmailVerificationForm'])->name('verification.notice');
 Route::post('/email/verify', [AuthController::class, 'sendVerificationEmail'])->name('verification.send');
-
-// Reset password via secure token link
 Route::get('password/reset/{token}', [AuthController::class, 'showPasswordResetForm'])->name('password.reset');
 Route::post('password/reset', [AuthController::class, 'resetPassword'])->name('password.update');
 
-// Protected routes
+// ============================================
+// ROUTES PROTÉGÉES (Authentification requise)
+// ============================================
+
 Route::middleware('auth')->group(function () {
     
-// Dashboard
-Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard')->middleware(['auth', 'permission:view-dashboard']);
+    // Dashboard
+    Route::get('/dashboard', [DashboardController::class, 'index'])
+        ->name('dashboard')
+        ->middleware('permission:view-dashboard');
 
-// Inventory - Produits avec permissions
-Route::middleware(['auth'])->group(function () {
-    Route::get('/products', [App\Http\Controllers\ProductController::class, 'index'])->name('products.index')->middleware('permission:view-products');
-    Route::get('/products/create', [App\Http\Controllers\ProductController::class, 'create'])->name('products.create')->middleware('permission:create-products');
-});
+    // INVENTAIRE - PRODUITS
+    Route::prefix('products')->name('products.')->middleware('permission:view-products')->group(function () {
+        Route::get('/', [App\Http\Controllers\ProductController::class, 'index'])->name('index');
+        Route::get('/create', [App\Http\Controllers\ProductController::class, 'create'])
+            ->name('create')
+            ->middleware('permission:create-products');
+        Route::post('/', [App\Http\Controllers\ProductController::class, 'store'])
+            ->name('store')
+            ->middleware('permission:create-products');
+        Route::get('/{product}', [App\Http\Controllers\ProductController::class, 'show'])->name('show');
+        Route::get('/{product}/edit', [App\Http\Controllers\ProductController::class, 'edit'])
+            ->name('edit')
+            ->middleware('permission:edit-products');
+        Route::put('/{product}', [App\Http\Controllers\ProductController::class, 'update'])
+            ->name('update')
+            ->middleware('permission:edit-products');
+        Route::delete('/{product}', [App\Http\Controllers\ProductController::class, 'destroy'])
+            ->name('destroy')
+            ->middleware('permission:delete-products');
+    });
 
-// Export routes avec permissions
-Route::prefix('export')->name('export.')->middleware(['auth'])->group(function () {
-    // Exports produits
-    Route::get('/products/excel', [App\Http\Controllers\Export\ExportController::class, 'productsExcel'])->name('products.excel')->middleware('permission:export-products');
-    Route::get('/products/pdf', [App\Http\Controllers\Export\ExportController::class, 'productsPdf'])->name('products.pdf')->middleware('permission:export-products');
-    Route::get('/products/preview', [App\Http\Controllers\Export\ExportController::class, 'productsPreview'])->name('products.preview')->middleware('permission:export-products');
-    Route::get('/products/stats', [App\Http\Controllers\Export\ExportController::class, 'productsStats'])->name('products.stats')->middleware('permission:view-products');
-    
-    // Exports stocks
-    Route::get('/stocks/excel', [App\Http\Controllers\Export\ExportController::class, 'stocksExcel'])->name('stocks.excel')->middleware('permission:export-stock');
-    Route::get('/stocks/pdf', [App\Http\Controllers\Export\ExportController::class, 'stocksPdf'])->name('stocks.pdf')->middleware('permission:export-stock');
-    Route::get('/stocks/preview', [App\Http\Controllers\Export\ExportController::class, 'stocksPreview'])->name('stocks.preview')->middleware('permission:export-stock');
-    Route::get('/stocks/view', [App\Http\Controllers\Export\ExportController::class, 'stocksView'])->name('stocks.view')->middleware('permission:export-stock');
-    Route::get('/stocks/test', [App\Http\Controllers\Export\ExportController::class, 'stocksTest'])->name('stocks.test');
-    Route::get('/stocks/stats', [App\Http\Controllers\Export\ExportController::class, 'stocksStats'])->name('stocks.stats')->middleware('permission:view-stock');
-    Route::get('/stocks/inventaire', [App\Http\Controllers\Export\ExportController::class, 'stocksInventaire'])->name('stocks.inventaire')->middleware('permission:export-stock');
-    Route::get('/stocks/inventaire/preview', [App\Http\Controllers\Export\ExportController::class, 'stocksInventairePreview'])->name('stocks.inventaire.preview')->middleware('permission:export-stock');
-    
-    // Exports mouvements
-    Route::get('/movements/excel', [App\Http\Controllers\Export\ExportController::class, 'movementsExcel'])->name('movements.excel')->middleware('permission:export-reports');
-    Route::get('/movements/pdf', [App\Http\Controllers\Export\ExportController::class, 'movementsPdf'])->name('movements.pdf')->middleware('permission:export-reports');
-});
+    // INVENTAIRE - STOCK
+    Route::prefix('stock')->name('stock.')->middleware('permission:view-stock')->group(function () {
+        Route::get('/', [App\Http\Controllers\StockController::class, 'index'])->name('index');
+        Route::get('/{product}', [App\Http\Controllers\StockController::class, 'show'])->name('show');
+        Route::delete('/{stock}', [App\Http\Controllers\StockController::class, 'destroy'])
+            ->name('destroy')
+            ->middleware('permission:manage-stock');
+    });
 
+    // INVENTAIRE - MOUVEMENTS
+    Route::prefix('movements')->name('movements.')->middleware('permission:view-movements')->group(function () {
+        Route::get('/', [App\Http\Controllers\MovementController::class, 'index'])->name('index');
+        Route::get('/create', [App\Http\Controllers\MovementController::class, 'create'])
+            ->name('create')
+            ->middleware('permission:create-movements');
+        Route::post('/', [App\Http\Controllers\MovementController::class, 'store'])
+            ->name('store')
+            ->middleware('permission:create-movements');
+    });
 
-// Routes de compatibilité (anciennes URLs)
-Route::get('/products/export/excel', [App\Http\Controllers\Export\ExportController::class, 'productsExcel'])->name('products.export.excel');
-Route::get('/products/export/pdf', [App\Http\Controllers\Export\ExportController::class, 'productsPdf'])->name('products.export.pdf');
+    // EXPORTS
+    Route::prefix('export')->name('export.')->group(function () {
+        Route::middleware('permission:export-products')->group(function () {
+            Route::get('/products/excel', [App\Http\Controllers\Export\ExportController::class, 'productsExcel'])->name('products.excel');
+            Route::get('/products/pdf', [App\Http\Controllers\Export\ExportController::class, 'productsPdf'])->name('products.pdf');
+            Route::get('/products/preview', [App\Http\Controllers\Export\ExportController::class, 'productsPreview'])->name('products.preview');
+        });
+        
+        Route::get('/products/stats', [App\Http\Controllers\Export\ExportController::class, 'productsStats'])
+            ->name('products.stats')
+            ->middleware('permission:view-products');
+        
+        Route::middleware('permission:export-stock')->group(function () {
+            Route::get('/stocks/excel', [App\Http\Controllers\Export\ExportController::class, 'stocksExcel'])->name('stocks.excel');
+            Route::get('/stocks/pdf', [App\Http\Controllers\Export\ExportController::class, 'stocksPdf'])->name('stocks.pdf');
+            Route::get('/stocks/preview', [App\Http\Controllers\Export\ExportController::class, 'stocksPreview'])->name('stocks.preview');
+            Route::get('/stocks/view', [App\Http\Controllers\Export\ExportController::class, 'stocksView'])->name('stocks.view');
+            Route::get('/stocks/inventaire', [App\Http\Controllers\Export\ExportController::class, 'stocksInventaire'])->name('stocks.inventaire');
+            Route::get('/stocks/inventaire/preview', [App\Http\Controllers\Export\ExportController::class, 'stocksInventairePreview'])->name('stocks.inventaire.preview');
+        });
+        
+        Route::get('/stocks/test', [App\Http\Controllers\Export\ExportController::class, 'stocksTest'])->name('stocks.test');
+        Route::get('/stocks/stats', [App\Http\Controllers\Export\ExportController::class, 'stocksStats'])
+            ->name('stocks.stats')
+            ->middleware('permission:view-stock');
+        
+        Route::middleware('permission:export-reports')->group(function () {
+            Route::get('/movements/excel', [App\Http\Controllers\Export\ExportController::class, 'movementsExcel'])->name('movements.excel');
+            Route::get('/movements/pdf', [App\Http\Controllers\Export\ExportController::class, 'movementsPdf'])->name('movements.pdf');
+        });
+    });
 
-// Routes produits avec permissions détaillées
-Route::middleware(['auth'])->group(function () {
-    Route::post('/products', [App\Http\Controllers\ProductController::class, 'store'])->name('products.store')->middleware('permission:create-products');
-    Route::get('/products/{product}', [App\Http\Controllers\ProductController::class, 'show'])->name('products.show')->middleware('permission:view-products');
-    Route::get('/products/{product}/edit', [App\Http\Controllers\ProductController::class, 'edit'])->name('products.edit')->middleware('permission:edit-products');
-    Route::put('/products/{product}', [App\Http\Controllers\ProductController::class, 'update'])->name('products.update')->middleware('permission:edit-products');
-    Route::delete('/products/{product}', [App\Http\Controllers\ProductController::class, 'destroy'])->name('products.destroy')->middleware('permission:delete-products');
-});
+    Route::get('/products/export/excel', [App\Http\Controllers\Export\ExportController::class, 'productsExcel'])->name('products.export.excel');
+    Route::get('/products/export/pdf', [App\Http\Controllers\Export\ExportController::class, 'productsPdf'])->name('products.export.pdf');
 
-// Routes stock avec permissions
-Route::prefix('stock')->name('stock.')->middleware(['auth'])->group(function () {
-    Route::get('/', [App\Http\Controllers\StockController::class, 'index'])->name('index')->middleware('permission:view-stock');
-    Route::get('/{product}', [App\Http\Controllers\StockController::class, 'show'])->name('stock.show')->middleware('permission:view-stock');
-    Route::delete('/{stock}', [App\Http\Controllers\StockController::class, 'destroy'])->name('destroy')->middleware('permission:manage-stock');
-});
+    // NOTIFICATIONS
+    Route::prefix('notifications')->name('notifications.')->middleware('permission:receive-stock-alerts')->group(function () {
+        Route::get('/stock', [App\Http\Controllers\NotificationController::class, 'getStockNotifications'])->name('stock');
+        Route::get('/count', [App\Http\Controllers\NotificationController::class, 'getNotificationCount'])->name('count');
+        Route::get('/stats', [App\Http\Controllers\NotificationController::class, 'getNotificationStats'])->name('stats');
+        Route::post('/mark-read', [App\Http\Controllers\NotificationController::class, 'markAsRead'])->name('mark-read');
+    });
 
-// Routes mouvements avec permissions
-Route::prefix('movements')->name('movements.')->middleware(['auth'])->group(function () {
-    Route::get('/', [App\Http\Controllers\MovementController::class, 'index'])->name('index')->middleware('permission:view-movements');
-    Route::get('/create', [App\Http\Controllers\MovementController::class, 'create'])->name('create')->middleware('permission:create-movements');
-    Route::post('/', [App\Http\Controllers\MovementController::class, 'store'])->name('store')->middleware('permission:create-movements');
-});
-
-// Notifications avec permissions
-Route::prefix('notifications')->name('notifications.')->middleware(['auth'])->group(function () {
-    Route::get('/stock', [App\Http\Controllers\NotificationController::class, 'getStockNotifications'])->name('stock')->middleware('permission:receive-stock-alerts');
-    Route::get('/count', [App\Http\Controllers\NotificationController::class, 'getNotificationCount'])->name('count')->middleware('permission:receive-stock-alerts');
-    Route::get('/stats', [App\Http\Controllers\NotificationController::class, 'getNotificationStats'])->name('stats')->middleware('permission:receive-stock-alerts');
-    Route::post('/mark-read', [App\Http\Controllers\NotificationController::class, 'markAsRead'])->name('mark-read')->middleware('permission:receive-stock-alerts');
-});
-
-// Sales
-
-// Administration - Gestion des utilisateurs et rôles
-Route::middleware(['auth'])->group(function () {
-    // Routes pour la gestion des utilisateurs (avec permissions détaillées)
-    Route::get('/users', [UserManagementController::class, 'index'])->name('users.index')->middleware('permission:manage-users');
-    Route::get('/users/create', [UserManagementController::class, 'create'])->name('users.create')->middleware('permission:manage-users');
-    Route::post('/users', [UserManagementController::class, 'store'])->name('users.store')->middleware('permission:manage-users');
-    Route::get('/users/{user}', [UserManagementController::class, 'show'])->name('users.show')->middleware('permission:manage-users');
-    Route::get('/users/{user}/edit', [UserManagementController::class, 'edit'])->name('users.edit')->middleware('permission:manage-users');
-    Route::put('/users/{user}', [UserManagementController::class, 'update'])->name('users.update')->middleware('permission:manage-users');
-    Route::delete('/users/{user}', [UserManagementController::class, 'destroy'])->name('users.destroy')->middleware('permission:manage-users');
-    
-    // Routes spéciales pour les rôles et permissions
-    Route::get('/users/roles/management', [UserManagementController::class, 'roles'])->name('users.roles')->middleware('permission:manage-roles');
-    Route::get('/users/roles/{role}/permissions', [UserManagementController::class, 'getRolePermissions'])->name('users.roles.permissions')->middleware('permission:manage-permissions');
-    Route::put('/users/roles/{role}/permissions', [UserManagementController::class, 'updateRolePermissions'])->name('users.roles.update')->middleware('permission:manage-permissions');
-    Route::patch('/users/{user}/toggle-status', [UserManagementController::class, 'toggleStatus'])->name('users.toggle-status')->middleware('permission:manage-users');
-    
-    // Routes pour réinitialisation d'urgence
-    Route::get('/users/emergency-reset', [UserManagementController::class, 'showEmergencyReset'])->name('users.emergency-reset')->middleware('permission:manage-users');
-    Route::post('/users/emergency-reset/password', [UserManagementController::class, 'emergencyPasswordReset'])->name('users.emergency-reset.password')->middleware('permission:manage-users');
-    Route::post('/users/emergency-reset/link', [UserManagementController::class, 'sendEmergencyResetLink'])->name('users.emergency-reset.link')->middleware('permission:manage-users');
-    Route::get('/users/security-stats', [UserManagementController::class, 'getSecurityStats'])->name('users.security-stats')->middleware('permission:manage-users');
-});
-
-// Categories - RESTful routes
+    // CATÉGORIES
+   // CATÉGORIES
 Route::resource('categories', CategoryController::class)->except(['create', 'edit']);
 
-// Additional custom routes for categories can be added here if needed
-Route::get('/categories/category/{category}', [CategoryController::class, 'show'])->name('categories.show');
+    // VENTES
+    Route::prefix('sales')->name('sales.')->middleware('permission:view-sales')->group(function () {
+        Route::get('/', [SaleController::class, 'index'])->name('index');
+        Route::get('/create', [SaleController::class, 'create'])
+            ->name('create')
+            ->middleware('permission:create-sales');
+        Route::post('/', [SaleController::class, 'store'])
+            ->name('store')
+            ->middleware('permission:create-sales');
+        Route::get('/{sale}', [SaleController::class, 'show'])->name('show');
+        Route::get('/{sale}/edit', [SaleController::class, 'edit'])
+            ->name('edit')
+            ->middleware('permission:edit-sales');
+        Route::put('/{sale}', [SaleController::class, 'update'])
+            ->name('update')
+            ->middleware('permission:edit-sales');
+        Route::delete('/{sale}', [SaleController::class, 'destroy'])
+            ->name('destroy')
+            ->middleware('permission:delete-sales');
+    });
 
-// Sales - Gestion des ventes avec vérification de stock
-Route::middleware(['auth'])->group(function () {
-    Route::get('sales', [SaleController::class, 'index'])->name('sales.index')->middleware('permission:view-sales');
-    Route::get('sales/create', [SaleController::class, 'create'])->name('sales.create')->middleware('permission:create-sales');
-    Route::post('sales', [SaleController::class, 'store'])->name('sales.store')->middleware('permission:create-sales');
-    Route::get('sales/{sale}', [SaleController::class, 'show'])->name('sales.show')->middleware('permission:view-sales');
-    Route::get('sales/{sale}/edit', [SaleController::class, 'edit'])->name('sales.edit')->middleware('permission:edit-sales');
-    Route::put('sales/{sale}', [SaleController::class, 'update'])->name('sales.update')->middleware('permission:edit-sales');
-    Route::delete('sales/{sale}', [SaleController::class, 'destroy'])->name('sales.destroy')->middleware('permission:delete-sales');
-    
-    // API pour vérification de stock en temps réel
-    Route::get('api/products/{product}/stock', [SaleController::class, 'checkStock'])->name('api.products.stock');
-});
+    Route::get('api/products/{product}/stock', [SaleController::class, 'checkStock'])
+        ->name('api.products.stock')
+        ->middleware('permission:view-sales');
 
-// Invoices - Réservées aux Vendeurs et Administrateurs
-Route::middleware(['auth'])->group(function () {
-    Route::resource('invoices', InvoiceController::class)->middleware('permission:manage-invoices');
-    Route::get('invoices/{invoice}/print', [InvoiceController::class, 'print'])->name('invoices.print')->middleware('permission:view-sales');
-    Route::get('invoices/{invoice}/download', [InvoiceController::class, 'download'])->name('invoices.download')->middleware('permission:view-sales');
-});
+    // FACTURES
+    Route::prefix('invoices')->name('invoices.')->middleware('permission:manage-invoices')->group(function () {
+        Route::get('/', [InvoiceController::class, 'index'])->name('index');
+        Route::get('/create', [InvoiceController::class, 'create'])->name('create');
+        Route::post('/', [InvoiceController::class, 'store'])->name('store');
+        Route::get('/{invoice}', [InvoiceController::class, 'show'])->name('show');
+        Route::get('/{invoice}/edit', [InvoiceController::class, 'edit'])->name('edit');
+        Route::put('/{invoice}', [InvoiceController::class, 'update'])->name('update');
+        Route::delete('/{invoice}', [InvoiceController::class, 'destroy'])->name('destroy');
+        Route::get('/{invoice}/print', [InvoiceController::class, 'print'])
+            ->name('print')
+            ->middleware('permission:view-sales');
+        Route::get('/{invoice}/download', [InvoiceController::class, 'download'])
+            ->name('download')
+            ->middleware('permission:view-sales');
+    });
 
-// Quotes - Devis (Admin et Vendeurs uniquement)
-Route::middleware(['auth', 'permission:create-sales'])->group(function () {
-    Route::get('quotes', [App\Http\Controllers\QuoteController::class, 'index'])->name('quotes.index');
-    Route::get('quotes/create', [App\Http\Controllers\QuoteController::class, 'create'])->name('quotes.create');
-    Route::post('quotes', [App\Http\Controllers\QuoteController::class, 'store'])->name('quotes.store');
-    Route::get('quotes/{quote}', [App\Http\Controllers\QuoteController::class, 'show'])->name('quotes.show');
-    Route::get('quotes/{quote}/edit', [App\Http\Controllers\QuoteController::class, 'edit'])->name('quotes.edit');
-    Route::put('quotes/{quote}', [App\Http\Controllers\QuoteController::class, 'update'])->name('quotes.update');
-    Route::delete('quotes/{quote}', [App\Http\Controllers\QuoteController::class, 'destroy'])->name('quotes.destroy');
-    
-    // Actions spéciales
-    Route::get('quotes/{quote}/print', [App\Http\Controllers\QuoteController::class, 'print'])->name('quotes.print');
-    Route::get('quotes/{quote}/pdf', [App\Http\Controllers\QuoteController::class, 'downloadPdf'])->name('quotes.pdf');
-    Route::post('quotes/{quote}/convert', [App\Http\Controllers\QuoteController::class, 'convertToSale'])->name('quotes.convert');
-    Route::post('quotes/{quote}/duplicate', [App\Http\Controllers\QuoteController::class, 'duplicate'])->name('quotes.duplicate');
-});
+    // DEVIS
+    Route::prefix('quotes')->name('quotes.')->middleware('permission:manage-quotes')->group(function () {
+        Route::get('/', [App\Http\Controllers\QuoteController::class, 'index'])->name('index');
+        Route::get('/create', [App\Http\Controllers\QuoteController::class, 'create'])->name('create');
+        Route::post('/', [App\Http\Controllers\QuoteController::class, 'store'])->name('store');
+        Route::get('/{quote}', [App\Http\Controllers\QuoteController::class, 'show'])->name('show');
+        Route::get('/{quote}/edit', [App\Http\Controllers\QuoteController::class, 'edit'])->name('edit');
+        Route::put('/{quote}', [App\Http\Controllers\QuoteController::class, 'update'])->name('update');
+        Route::delete('/{quote}', [App\Http\Controllers\QuoteController::class, 'destroy'])->name('destroy');
+        Route::get('/{quote}/print', [App\Http\Controllers\QuoteController::class, 'print'])->name('print');
+        Route::post('/{quote}/download-pdf', [App\Http\Controllers\QuoteController::class, 'downloadPdf'])->name('download-pdf');
+        Route::post('/{quote}/convert', [App\Http\Controllers\QuoteController::class, 'convertToSale'])->name('convert');
+        Route::post('/{quote}/duplicate', [App\Http\Controllers\QuoteController::class, 'duplicate'])->name('duplicate');
+    });
 
+    // ADMINISTRATION - UTILISATEURS
+    Route::prefix('users')->name('users.')->middleware('permission:manage-users')->group(function () {
+        Route::get('/', [UserManagementController::class, 'index'])->name('index');
+        Route::get('/create', [UserManagementController::class, 'create'])->name('create');
+        Route::post('/', [UserManagementController::class, 'store'])->name('store');
+        Route::get('/{user}', [UserManagementController::class, 'show'])->name('show');
+        Route::get('/{user}/edit', [UserManagementController::class, 'edit'])->name('edit');
+        Route::put('/{user}', [UserManagementController::class, 'update'])->name('update');
+        Route::delete('/{user}', [UserManagementController::class, 'destroy'])->name('destroy');
+        Route::patch('/{user}/toggle-status', [UserManagementController::class, 'toggleStatus'])->name('toggle-status');
+        Route::get('/emergency-reset', [UserManagementController::class, 'showEmergencyReset'])->name('emergency-reset');
+        Route::post('/emergency-reset/password', [UserManagementController::class, 'emergencyPasswordReset'])->name('emergency-reset.password');
+        Route::post('/emergency-reset/link', [UserManagementController::class, 'sendEmergencyResetLink'])->name('emergency-reset.link');
+        Route::get('/security-stats', [UserManagementController::class, 'getSecurityStats'])->name('security-stats');
+    });
+
+    // RÔLES & PERMISSIONS
+    Route::middleware('permission:manage-roles')->group(function () {
+        Route::get('/users/roles/management', [UserManagementController::class, 'roles'])->name('users.roles');
+        Route::middleware('permission:manage-permissions')->group(function () {
+            Route::get('/users/roles/{role}/permissions', [UserManagementController::class, 'getRolePermissions'])->name('users.roles.permissions');
+            Route::put('/users/roles/{role}/permissions', [UserManagementController::class, 'updateRolePermissions'])->name('users.roles.update');
+        });
+    });
 });

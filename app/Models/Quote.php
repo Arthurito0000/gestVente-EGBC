@@ -42,16 +42,26 @@ class Quote extends Model
 
     public static function generateNumeroDevis()
     {
-        $lastQuote = self::latest()->first();
-        
-        if ($lastQuote) {
-            $lastNumber = (int) str_replace('DEV-', '', $lastQuote->numero_devis);
-            $newNumber = str_pad($lastNumber + 1, 3, '0', STR_PAD_LEFT);
-        } else {
-            $newNumber = '001';
-        }
+        // Keep trying to find a unique number
+        $attempt = 1;
+        do {
+            $number = str_pad($attempt, 3, '0', STR_PAD_LEFT);
+            $numeroDevis = "DEV-{$number}";
 
-        return "DEV-{$newNumber}";
+            // Check if this number already exists
+            $exists = self::where('numero_devis', $numeroDevis)->exists();
+
+            if (!$exists) {
+                return $numeroDevis;
+            }
+
+            $attempt++;
+
+            // Safety check to prevent infinite loop
+            if ($attempt > 9999) {
+                throw new \Exception('Unable to generate unique quote number');
+            }
+        } while ($exists);
     }
 
     public function getTotalMaterielFormatte()

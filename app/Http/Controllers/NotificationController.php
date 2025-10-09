@@ -12,84 +12,90 @@ class NotificationController extends Controller
      * Obtenir les notifications de stocks faibles ET ruptures
      */
     public function getStockNotifications()
-    {
-        // NOUVELLE LOGIQUE : Inclure les ruptures de stock (quantité = 0) ET les stocks faibles
-        // Ruptures : quantité = 0 (priorité CRITIQUE)
-        // Stocks faibles : quantité <= (seuil + seuil/2) et quantité > 0
+{
+    // Vérification stricte
+    if (!auth()->check()) {
+        return response()->json([
+            'notifications' => [],
+            'count' => 0,
+            'error' => 'Unauthorized'
+        ], 401);
+    }
+
+    try {
+        // Récupérer les stocks avec leurs produits
         $stockProducts = Stock::with('product')
             ->where(function($query) {
-                $query->where('quantite', 0) // Ruptures de stock
-                      ->orWhereRaw('quantite <= (seuil + seuil / 2)'); // Stocks faibles
+                $query->where('quantite', 0)
+                      ->orWhereRaw('quantite <= (seuil + seuil / 2)');
             })
-            ->orderByRaw('CASE WHEN quantite = 0 THEN 0 ELSE quantite END ASC') // Ruptures en premier
+            ->orderByRaw('CASE WHEN quantite = 0 THEN 0 ELSE quantite END ASC')
             ->get();
 
         $notifications = [];
         
         foreach ($stockProducts as $stock) {
+            // Calculer le seuil d'alerte (seuil + 50% du seuil)
             $seuilAlerte = $stock->seuil + ($stock->seuil / 2);
             
-            // Gestion spéciale pour les ruptures de stock
+            // Déterminer la priorité et les détails
             if ($stock->quantite == 0) {
+                // RUPTURE DE STOCK
                 $notifications[] = [
-                    'id' => $stock->id,
-                    'type' => 'rupture_stock',
-                    'title' => '🚨 RUPTURE DE STOCK',
-                    'message' => "URGENT : Le produit \"{$stock->product->nom}\" (SKU: {$stock->product->sku}) est en rupture totale ! Réapprovisionnement immédiat requis.",
+                    'priority' => 'critical',
+                    'title' => 'RUPTURE TOTALE - Vente impossible',
                     'details' => [
                         'product_name' => $stock->product->nom,
                         'sku' => $stock->product->sku,
                         'stock_actuel' => 0,
                         'seuil_critique' => $stock->seuil,
-                        'seuil_alerte' => round($seuilAlerte, 1),
-                        'pourcentage' => 0,
-                        'quantite_recommandee' => $stock->seuil * 3, // Plus de stock recommandé pour rupture
-                        'jours_rupture' => 0 // Peut être calculé plus tard
-                    ],
-                    'priority' => 'critical', // Nouvelle priorité CRITIQUE
-                    'created_at' => now()->format('d/m/Y H:i')
+                        'seuil_alerte' => $seuilAlerte,
+                        'quantite_recommandee' => $stock->seuil * 2, // Recommander le double du seuil
+                        'pourcentage' => 0
+                    ]
                 ];
-            } else {
-                // Logique existante pour stocks faibles
-                $pourcentage = ($stock->quantite / $seuilAlerte) * 100;
-                
-                // Déterminer le niveau d'urgence
-                $priority = 'low';
-                $statusMessage = 'Stock bientôt faible';
-                
-                if ($stock->quantite <= $stock->seuil) {
-                    $priority = 'high';
-                    $statusMessage = 'Stock critique - Réapprovisionnement urgent';
-                } elseif ($stock->quantite <= ($stock->seuil * 1.25)) { // 125% du seuil
-                    $priority = 'medium';
-                    $statusMessage = 'Stock faible - Prévoir réapprovisionnement';
-                }
-                
+            } elseif ($stock->quantite <= $stock->seuil) {
+                // STOCK CRITIQUE
+                $pourcentage = round(($stock->quantite / $seuilAlerte) * 100, 1);
                 $notifications[] = [
-                    'id' => $stock->id,
-                    'type' => 'stock_faible',
-                    'title' => $statusMessage,
-                    'message' => "Le produit \"{$stock->product->nom}\" (SKU: {$stock->product->sku}) approche du seuil critique. Prévoir un réapprovisionnement.",
+                    'priority' => 'high',
+                    'title' => 'Stock critique - Réapprovisionnement urgent requis',
                     'details' => [
                         'product_name' => $stock->product->nom,
                         'sku' => $stock->product->sku,
                         'stock_actuel' => $stock->quantite,
                         'seuil_critique' => $stock->seuil,
-                        'seuil_alerte' => round($seuilAlerte, 1),
-                        'pourcentage' => round($pourcentage, 1),
-                        'quantite_recommandee' => $stock->seuil * 2 // Suggestion de réapprovisionnement
-                    ],
-                    'priority' => $priority,
-                    'created_at' => now()->format('d/m/Y H:i')
+                        'seuil_alerte' => $seuilAlerte,
+                        'pourcentage' => $pourcentage
+                    ]
+                ];
+            } elseif ($stock->quantite <= $seuilAlerte) {
+                // STOCK FAIBLE
+                $pourcentage = round(($stock->quantite / $seuilAlerte) * 100, 1);
+                $notifications[] = [
+                    'priority' => 'medium',
+                    'title' => 'Stock faible - Planifier un réapprovisionnement',
+                    'details' => [
+                        'product_name' => $stock->product->nom,
+                        'sku' => $stock->product->sku,
+                        'stock_actuel' => $stock->quantite,
+                        'seuil_critique' => $stock->seuil,
+                        'seuil_alerte' => $seuilAlerte,
+                        'pourcentage' => $pourcentage
+                    ]
                 ];
             }
         }
-
+        
         return response()->json([
             'notifications' => $notifications,
             'count' => count($notifications)
         ]);
+    } catch (\Exception $e) {
+        \Log::error('Erreur notifications stock: ' . $e->getMessage());
+        return response()->json(['notifications' => [], 'count' => 0], 500);
     }
+}
 
     /**
      * Marquer une notification comme lue (pour usage futur)
@@ -106,15 +112,25 @@ class NotificationController extends Controller
      */
     public function getNotificationCount()
     {
-        // Compter les ruptures de stock ET les stocks faibles
-        $count = Stock::where(function($query) {
-                $query->where('quantite', 0) // Ruptures de stock
-                      ->orWhereRaw('quantite <= (seuil + seuil / 2)'); // Stocks faibles
-            })
-            ->count();
-
-        return response()->json(['count' => $count]);
+        // Vérification stricte
+        if (!auth()->check()) {
+            return response()->json(['count' => 0, 'error' => 'Unauthorized'], 401);
+        }
+    
+        try {
+            $count = Stock::where(function($query) {
+                    $query->where('quantite', 0)
+                          ->orWhereRaw('quantite <= (seuil + seuil / 2)');
+                })
+                ->count();
+    
+            return response()->json(['count' => $count]);
+        } catch (\Exception $e) {
+            \Log::error('Erreur notifications count: ' . $e->getMessage());
+            return response()->json(['count' => 0], 500);
+        }
     }
+    
 
     /**
      * Obtenir les statistiques des notifications

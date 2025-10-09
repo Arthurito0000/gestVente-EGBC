@@ -6,25 +6,21 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    /**
-     * Run the migrations.
-     */
     public function up(): void
     {
         Schema::create('movements', function (Blueprint $table) {
             $table->id();
             $table->foreignId('product_id')->constrained()->onDelete('cascade');
-            $table->enum('type', ['ENTREE', 'SORTIE']);
-            $table->integer('quantite');
+            $table->enum('type', ['ENTREE', 'SORTIE', 'AJUSTEMENT']); // 🔴 IMPORTANT : avec guillemets
+            $table->enum('ajustement_type', ['AUGMENTATIF', 'DIMINUTIF'])->nullable();
+            $table->decimal('quantite', 10, 3);
+            $table->decimal('prix_achat', 10, 2)->nullable();
             $table->string('motif');
-            $table->datetime('date');
+            $table->timestamp('date');
             $table->timestamps();
         });
     }
 
-    /**
-     * Reverse the migrations.
-     */
     public function down(): void
     {
         Schema::dropIfExists('movements');

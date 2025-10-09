@@ -22,6 +22,8 @@ class Movement extends Model
     ];
     
     protected $casts = [
+        'quantite' => 'decimal:3',
+        'prix_achat' => 'decimal:3',
         'date' => 'datetime'
     ];
     

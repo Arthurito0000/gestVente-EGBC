@@ -16,13 +16,13 @@
   </div>
 
   <div class="bg-white rounded-2xl shadow-md overflow-hidden">
-    <div class="p-4 border-b flex items-center justify-between">
+    <div class="p-4 border-b border-gray-100 flex items-center justify-between">
       <div class="text-sm text-gray-600">Historique des mouvements</div>
       <div id="lastUpdated" class="text-xs text-gray-500">Mis à jour: maintenant</div>
     </div>
     <div class="overflow-x-auto">
       <table class="min-w-full divide-y divide-gray-200" id="movementsTable">
-        <thead class="bg-gray-50">
+        <thead class="bg-gray-100">
           <tr>
             <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Date</th>
             <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Produit</th>

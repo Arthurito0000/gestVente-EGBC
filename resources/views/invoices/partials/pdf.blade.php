@@ -7,8 +7,10 @@
     <style>
         body {
             font-family: DejaVu Sans, sans-serif;
-            font-size: 14px;
+            font-size: 12px;
             color: #333;
+            margin: 0;
+            padding: 20px;
         }
 
         .header {
@@ -21,6 +23,7 @@
         .header h1 {
             margin: 0;
             color: #2c3e50;
+            font-size: 18px;
         }
 
         .invoice-info {
@@ -29,6 +32,7 @@
 
         .invoice-info table {
             width: 100%;
+            border-collapse: collapse;
         }
 
         .invoice-info td {
@@ -38,18 +42,25 @@
         .products table {
             width: 100%;
             border-collapse: collapse;
+            table-layout: fixed;
         }
 
         .products th,
         .products td {
             border: 1px solid #ddd;
-            padding: 8px;
+            padding: 6px;
             text-align: center;
+            word-wrap: break-word;
         }
 
         .products th {
             background: #f8f8f8;
             font-weight: bold;
+            font-size: 11px;
+        }
+
+        .products td {
+            font-size: 10px;
         }
 
         .total {
@@ -58,7 +69,7 @@
         }
 
         .total strong {
-            font-size: 16px;
+            font-size: 14px;
             color: #2c3e50;
         }
 
@@ -68,8 +79,81 @@
             left: 0;
             right: 0;
             text-align: center;
-            font-size: 12px;
+            font-size: 10px;
             color: #777;
+        }
+        
+        @media print {
+            body {
+                font-size: 10px;
+                padding: 10px;
+            }
+            
+            .header h1 {
+                font-size: 16px;
+            }
+            
+            .products th {
+                font-size: 9px;
+                padding: 4px;
+            }
+            
+            .products td {
+                font-size: 8px;
+                padding: 3px;
+            }
+            
+            .total strong {
+                font-size: 12px;
+            }
+        }
+        
+        @media (max-width: 768px) {
+            body {
+                font-size: 10px;
+                padding: 10px;
+            }
+            
+            .header h1 {
+                font-size: 16px;
+            }
+            
+            .products th,
+            .products td {
+                padding: 4px;
+                font-size: 9px;
+            }
+            
+            .invoice-info td {
+                padding: 3px;
+                font-size: 9px;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            body {
+                font-size: 9px;
+                padding: 5px;
+            }
+            
+            .header h1 {
+                font-size: 14px;
+            }
+            
+            .products th,
+            .products td {
+                padding: 3px;
+                font-size: 8px;
+            }
+            
+            .invoice-info td {
+                padding: 2px;
+                font-size: 8px;
+            }
+            
+            .total strong {
+                font-size: 11px;
+            }
         }
     </style>
 </head>
@@ -100,19 +184,19 @@
         <table>
             <thead>
                 <tr>
-                    <th>#</th>
-                    <th>Produit</th>
-                    <th>Quantité</th>
-                    <th>Prix Unitaire ({{ $invoice->currency }})</th>
-                    <th>Total ({{ $invoice->currency }})</th>
+                    <th style="width: 5%;">#</th>
+                    <th style="width: 35%;">Produit</th>
+                    <th style="width: 15%;">Quantité</th>
+                    <th style="width: 20%;">Prix Unitaire ({{ $invoice->currency }})</th>
+                    <th style="width: 25%;">Total ({{ $invoice->currency }})</th>
                 </tr>
             </thead>
             <tbody>
                 @foreach ($invoice->products as $index => $product)
                     <tr>
                         <td>{{ $index + 1 }}</td>
-                        <td>{{ $product->nom }}</td>
-                        <td>{{ $product->pivot->quantity }}</td>
+                        <td style="text-align: left;">{{ $product->nom }}</td>
+                        <td>{{ rtrim(rtrim(number_format($product->pivot->quantity, 3, ',', ''), '0'), ',') }}</td>
                         <td>{{ number_format($product->pivot->unit_price, 2, ',', ' ') }}</td>
                         <td>{{ number_format($product->pivot->total_price, 2, ',', ' ') }}</td>
                     </tr>

@@ -47,8 +47,8 @@ class InvoiceController extends Controller
     {
         $products = Product::all();
         
-        // Vérifier s'il y a des données de devis à convertir
-        $quoteData = session('quote_to_convert');
+        // Récupérer les données de devis PUIS les supprimer immédiatement
+        $quoteData = session()->pull('quote_to_convert'); // pull() récupère ET supprime en une seule opération
         
         return view('invoices.create', compact('products', 'quoteData'));
     }
@@ -58,9 +58,25 @@ class InvoiceController extends Controller
      */
     public function store(StoreInvoiceRequest $request)
     {
-        DB::beginTransaction();
+        
     
         try {
+
+            if ($request->has('lines')) {
+                foreach ($request->lines as $key => $line) {
+                    if (isset($line['quantite_decimal']) && $line['quantite_decimal']) {
+                        $request->merge([
+                            "lines.{$key}.quantity" => $line['quantite_decimal']
+                        ]);
+                    } elseif (isset($line['quantity']) && strpos($line['quantity'], '/') !== false) {
+                        [$numerator, $denominator] = explode('/', $line['quantity']);
+                        $decimal = floatval($numerator) / floatval($denominator);
+                        $request->merge([
+                            "lines.{$key}.quantity" => $decimal
+                        ]);
+                    }
+                }
+            }
 
             $invoice_number =  Invoice::count() + 1;
             // Save invoice
@@ -146,7 +162,7 @@ class InvoiceController extends Controller
             Log::info('Transaction committed successfully');
     
             // 🔴 BUG FIX A : Nettoyer la session après création de la facture
-            session()->forget('quote_to_convert');
+            // session()->forget('quote_to_convert');
             
             // Load relations
             $invoice->load('products');

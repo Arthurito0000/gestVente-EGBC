@@ -31,7 +31,7 @@
   </div>
 
   <div class="bg-white rounded-2xl shadow-md overflow-hidden">
-    <div class="p-4 border-b flex items-center justify-between">
+    <div class="p-4 border-b border-gray-100 flex items-center justify-between">
       <div class="text-sm text-gray-600">Liste des produits</div>
       <div class="flex items-center gap-2 text-sm">
         @can('export-products')
@@ -62,7 +62,7 @@
 </div>
 
 <!-- Modal de confirmation de suppression -->
-<div id="deleteModal" class="fixed inset-0 bg-black bg-opacity-50 overflow-y-auto h-full w-full hidden z-50 backdrop-blur-sm transition-all duration-300">
+<div id="deleteModal" class="fixed inset-0 bg-white/80 backdrop-blur supports-[backdrop-filter]:bg-white/60  overflow-y-auto h-full w-full hidden z-50 backdrop-blur-sm transition-all duration-300">
   <div class="flex items-center justify-center min-h-screen px-4">
     <div id="modalContent" class="relative bg-white rounded-2xl shadow-2xl w-full max-w-md transform transition-all duration-300 scale-95 opacity-0">
       <!-- Bouton de fermeture -->

@@ -49,6 +49,7 @@ class RolePermissionSeeder extends Seeder
             'manage-invoices',
             
             // Permissions Administration
+            'manage-quotes',
             'manage-users',
             'manage-roles',
             'manage-permissions',
@@ -149,9 +150,9 @@ class RolePermissionSeeder extends Seeder
             'view-dashboard',
             
             // Gestion des produits (consultation + création)
-            'view-products',
-            'create-products',
-            'edit-products',
+            // 'view-products',
+            // 'create-products',
+            // 'edit-products',
             
             // Consultation du stock UNIQUEMENT (pas de mouvements)
             'view-stock',
@@ -160,7 +161,7 @@ class RolePermissionSeeder extends Seeder
             'receive-stock-alerts',
             
             // Gestion des catégories (pour créer des catégories de produits)
-            'manage-categories',
+            // 'manage-categories',
             
             // Gestion complète des ventes et factures
             'view-sales',

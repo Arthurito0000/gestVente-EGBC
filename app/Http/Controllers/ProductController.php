@@ -58,15 +58,7 @@ class ProductController extends Controller
      */
     public function store(Request $request)
     {
-        $request->validate([
-            'sku' => 'required|string|unique:products,sku|max:255',
-            'nom' => 'required|string|max:255',
-            'prix_achat' => 'required|numeric|min:0',
-            'prix_vente' => 'required|numeric|min:0',
-            'categorie' => 'nullable|string|max:255',
-            'quantite' => 'required|integer|min:0',
-            'seuil_stock' => 'required|integer|min:0'
-        ]);
+        $request->validate(Product::rules());
 
         try {
             DB::transaction(function () use ($request) {
@@ -124,15 +116,7 @@ class ProductController extends Controller
      */
     public function update(Request $request, Product $product)
     {
-        $request->validate([
-            'sku' => 'required|string|unique:products,sku,' . $product->id . '|max:255',
-            'nom' => 'required|string|max:255',
-            'prix_achat' => 'required|numeric|min:0',
-            'prix_vente' => 'required|numeric|min:0',
-            'categorie' => 'nullable|string|exists:categories,name',
-            // 'quantite' => 'required|integer|min:0',
-            'seuil_stock' => 'required|integer|min:0'
-        ]);
+        $request->validate(Product::rules($product->id));
 
         $product->update($request->all());
 

@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Devis {{ $quote->numero_devis }}</title>
     <style>
-        * {
+             * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
@@ -13,11 +13,15 @@
         
         body {
             font-family: Arial, sans-serif;
-            font-size: 12px;
-            line-height: 1.4;
+            font-size: 11px;
+            line-height: 1.3;
             color: #000;
-            padding: 20px;
+            padding: 15mm;
+            max-width: 210mm;
+            margin: 0 auto;
+            background-color: gray;
         }
+        
         
         .header {
             text-align: center;
@@ -27,9 +31,9 @@
         }
         
         .logo {
-            max-width: 120px;
+            max-width: 80px;
             height: auto;
-            margin: 0 auto 10px;
+            margin: 0 auto 8px;
             display: block;
         }
         
@@ -135,6 +139,14 @@
             display: flex;
             justify-content: space-between;
         }
+
+        .container {
+            /* max-width:280px; */
+            width:780px;
+            margin: 0 auto;
+            background-color: white;
+            padding: 30px;
+        }
         
         .signature-box {
             width: 45%;
@@ -146,7 +158,12 @@
             margin-top: 60px;
             padding-top: 5px;
         }
-        
+
+        @page {
+            size: A4;
+            margin: 0;
+        }
+
         @media print {
             body {
                 padding: 10px;
@@ -159,8 +176,8 @@
     </style>
 </head>
 <body>
-    <!-- Bouton d'impression -->
-    <div class="no-print" style="text-align: right; margin-bottom: 20px;">
+
+<div class="no-print" style="text-align: right; margin-bottom: 20px;">
         <button onclick="window.print()" style="padding: 10px 20px; background-color: #4CAF50; color: white; border: none; border-radius: 5px; cursor: pointer;">
             Imprimer
         </button>
@@ -168,17 +185,19 @@
             Fermer
         </button>
     </div>
+   <div class="container">
+     <!-- Bouton d'impression -->
+     
 
     <!-- En-tête -->
     <div class="header">
         <img src="{{ asset('images/logo.png') }}" alt="Logo" class="logo">
-        <div class="company-name">ETS GLASS LE BIEN</div>
+        <div class="company-name">ETS GLASS LE BIEN CONSTRUCTION (EGBC)</div>
         <div class="company-info">
-            <strong>VITRERIE-MENUISERIE- ALUMINIUM</strong><br>
-            Vente des Vitres - aluminium -accessoires<br>
+            <strong>VITRERIE-MENUISERIE-ALUMINIUM</strong><br>
             FABRICATION ET POSE DES OUVERTURES EN ALUMINIUM ET GRILLE DE PROTECTION ROULANTE<br>
-            SITUE A DOUALA (LENDI QUARTIER GENERAL)<br>
-            TEL: 670 -51 -71 -34 / 690 -27 - 56 -50
+            SITUÉ A DOUALA (ENTRE L'ENTRÉE DÉCHARGE ET ENTRÉE MAADI)<br>
+            TEL: 670-51-71-34 / 690-27-56-50
         </div>
     </div>
 
@@ -216,14 +235,14 @@
         <thead>
             <tr>
                 <th style="width: 5%;">N°</th>
-                <th style="width: 40%;">DESIGNATIONS</th>
+                <th style="width: 45%;">DÉSIGNATIONS</th>
                 <th style="width: 10%;" class="text-center">QTES</th>
-                <th style="width: 15%;" class="text-right">P.U</th>
-                <th style="width: 15%;" class="text-right">P.T</th>
+                <th style="width: 18%;" class="text-right">P.U</th>
+                <th style="width: 22%;" class="text-right">P.T</th>
             </tr>
         </thead>
         <tbody>
-            @foreach($quote->items->where('type', 'materiel') as $index => $item)
+            @foreach($quote->items as $index => $item)
             <tr>
                 <td class="text-center">{{ $index + 1 }}</td>
                 <td>{{ $item->designation }}</td>
@@ -236,19 +255,18 @@
                 <td colspan="4" style="text-align: right; font-weight: bold; background-color: #f0f0f0;">TOTAL MATERIEL</td>
                 <td class="text-right" style="font-weight: bold; background-color: #f0f0f0;">{{ number_format($quote->total_materiel, 0, ',', ' ') }}</td>
             </tr>
-            @if($quote->items->where('type', 'main_oeuvre')->count() > 0)
+            @if($quote->main_oeuvre > 0)
             <tr>
                 <td colspan="4" style="text-align: right; font-weight: bold; background-color: #f0f0f0;">MAIN D'ŒUVRE</td>
-                <td class="text-right" style="font-weight: bold; background-color: #f0f0f0;">{{ number_format($quote->total_main_oeuvre, 0, ',', ' ') }}</td>
+                <td class="text-right" style="font-weight: bold; background-color: #f0f0f0;">{{ number_format($quote->main_oeuvre, 0, ',', ' ') }}</td>
             </tr>
             @endif
             <tr>
-                <td colspan="4" style="text-align: right; font-weight: bold; background-color: #e0e0e0; font-size: 13px;">TOTAL</td>
-                <td class="text-right" style="font-weight: bold; background-color: #e0e0e0; font-size: 13px;">{{ number_format($quote->total_general, 0, ',', ' ') }}</td>
+                <td colspan="4" style="text-align: right; font-weight: bold; background-color: #e0e0e0; font-size: 12px;">TOTAL</td>
+                <td class="text-right" style="font-weight: bold; background-color: #e0e0e0; font-size: 12px;">{{ number_format($quote->total_general, 0, ',', ' ') }}</td>
             </tr>
         </tbody>
     </table>
-
     <!-- Note de bas de page -->
     <div class="footer">
         Arrêté le présent Devis à la somme de {{ number_format($quote->total_general, 0, ',', ' ') }} FCFA 
@@ -266,5 +284,6 @@
             <div class="signature-line"></div>
         </div>
     </div>
+   </div>
 </body>
 </html>

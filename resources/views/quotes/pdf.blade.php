@@ -2,7 +2,7 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
     <title>Devis {{ $quote->numero_devis }}</title>
     <style>
         * {
@@ -11,11 +11,16 @@
             box-sizing: border-box;
         }
         
+        @page {
+            margin: 20mm;
+        }
+        
         body {
-            font-family: Arial, sans-serif;
+            font-family: DejaVu Sans, Arial, sans-serif;
             font-size: 11px;
             line-height: 1.3;
             color: #000;
+            padding: 15mm;
         }
         
         .header {
@@ -23,12 +28,6 @@
             margin-bottom: 15px;
             border-bottom: 2px solid #000;
             padding-bottom: 10px;
-        }
-        
-        .logo {
-            max-width: 100px;
-            height: auto;
-            margin: 0 auto 8px;
         }
         
         .company-name {
@@ -135,14 +134,12 @@
 <body>
     <!-- En-tête -->
     <div class="header">
-        <img src="{{ public_path('images/logo.png') }}" alt="Logo" class="logo">
-        <div class="company-name">ETS GLASS LE BIEN CONSTRUCTION</div>
+        <div class="company-name">ETS GLASS LE BIEN CONSTRUCTION (EGBC)</div>
         <div class="company-info">
-            <strong>VITRERIE-MENUISERIE- ALUMINIUM</strong><br>
-            Vente des Vitres - aluminium -accessoires<br>
+            <strong>VITRERIE-MENUISERIE-ALUMINIUM</strong><br>
             FABRICATION ET POSE DES OUVERTURES EN ALUMINIUM ET GRILLE DE PROTECTION ROULANTE<br>
-            SITUE A DOUALA (LENDI QUARTIER GENERAL)<br>
-            TEL: 670 -51 -71 -34 / 690 -27 - 56 -50
+            SITUÉ A DOUALA (ENTRE L'ENTRÉE DÉCHARGE ET ENTRÉE MAADI)<br>
+            TEL: 670-51-71-34 / 690-27-56-50
         </div>
     </div>
 
@@ -159,9 +156,6 @@
     <div class="info-section">
         <div class="info-row">
             <span class="info-label">N° Devis:</span> {{ $quote->numero_devis }}
-        </div>
-        <div class="info-row">
-            <span class="info-label">Client:</span> {{ $quote->client_nom }}
         </div>
         @if($quote->date_validite)
         <div class="info-row">
@@ -182,14 +176,14 @@
         <thead>
             <tr>
                 <th style="width: 5%;">N°</th>
-                <th style="width: 45%;">DESIGNATIONS</th>
+                <th style="width: 45%;">DÉSIGNATIONS</th>
                 <th style="width: 10%;" class="text-center">QTES</th>
                 <th style="width: 18%;" class="text-right">P.U</th>
                 <th style="width: 22%;" class="text-right">P.T</th>
             </tr>
         </thead>
         <tbody>
-            @foreach($quote->items->where('type', 'materiel') as $index => $item)
+            @foreach($quote->items as $index => $item)
             <tr>
                 <td class="text-center">{{ $index + 1 }}</td>
                 <td>{{ $item->designation }}</td>
@@ -202,10 +196,10 @@
                 <td colspan="4" style="text-align: right; font-weight: bold; background-color: #f0f0f0;">TOTAL MATERIEL</td>
                 <td class="text-right" style="font-weight: bold; background-color: #f0f0f0;">{{ number_format($quote->total_materiel, 0, ',', ' ') }}</td>
             </tr>
-            @if($quote->items->where('type', 'main_oeuvre')->count() > 0)
+            @if($quote->main_oeuvre > 0)
             <tr>
                 <td colspan="4" style="text-align: right; font-weight: bold; background-color: #f0f0f0;">MAIN D'ŒUVRE</td>
-                <td class="text-right" style="font-weight: bold; background-color: #f0f0f0;">{{ number_format($quote->total_main_oeuvre, 0, ',', ' ') }}</td>
+                <td class="text-right" style="font-weight: bold; background-color: #f0f0f0;">{{ number_format($quote->main_oeuvre, 0, ',', ' ') }}</td>
             </tr>
             @endif
             <tr>
@@ -218,7 +212,11 @@
     <!-- Note de bas de page -->
     <div class="footer">
         Arrêté le présent Devis à la somme de {{ number_format($quote->total_general, 0, ',', ' ') }} FCFA 
-        ({{ ucfirst(\NumberFormatter::create('fr', \NumberFormatter::SPELLOUT)->format($quote->total_general)) }} francs CFA)
+        @php
+            $formatter = new \NumberFormatter('fr', \NumberFormatter::SPELLOUT);
+            $amountInWords = ucfirst($formatter->format($quote->total_general));
+        @endphp
+        ({{ $amountInWords }} francs CFA)
     </div>
 
     <!-- Signatures -->
@@ -226,7 +224,7 @@
         <table>
             <tr>
                 <td>
-                    <div>Mme CHRISTINE (Lendi)</div>
+                    <div>{{ $quote->client_nom }}</div>
                     <div class="signature-line"></div>
                 </td>
                 <td>

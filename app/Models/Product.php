@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Validation\Rule;
 
 class Product extends Model
 {
@@ -23,6 +24,28 @@ class Product extends Model
         'prix_vente' => 'decimal:2',
         'seuil_stock' => 'integer'
     ];
+
+    // Add validation rules
+    public static function rules($id = null)
+    {
+        return [
+            'sku' => 'required|unique:products,sku,' . $id,
+            'nom' => 'required|string|max:255',
+            'prix_achat' => 'required|numeric|min:0',
+            'prix_vente' => [
+                'required',
+                'numeric',
+                'min:0',
+                function ($attribute, $value, $fail) {
+                    if (isset(request()->prix_achat) && $value <= request()->prix_achat) {
+                        $fail('Le prix de vente doit être supérieur au prix d\'achat.');
+                    }
+                },
+            ],
+            'categorie' => 'nullable|string|max:100',
+            'seuil_stock' => 'required|integer|min:0',
+        ];
+    }
 
     // Scopes
     public function scopeEnStock($query)

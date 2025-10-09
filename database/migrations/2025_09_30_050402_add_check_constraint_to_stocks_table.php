@@ -12,7 +12,13 @@ return new class extends Migration
      */
     public function up(): void
     {
-        // Ajouter une contrainte CHECK pour empêcher les stocks négatifs
+        // Check if we're using SQLite
+        if (DB::getDriverName() === 'sqlite') {
+            // SQLite doesn't support ADD CONSTRAINT, so we'll skip this migration
+            return;
+        }
+        
+        // Ajouter une contrainte CHECK pour empêcher les stocks négatifs (MySQL only)
         DB::statement('ALTER TABLE stocks ADD CONSTRAINT check_quantite_positive CHECK (quantite >= 0)');
         DB::statement('ALTER TABLE stocks ADD CONSTRAINT check_seuil_positive CHECK (seuil >= 0)');
     }
@@ -22,7 +28,13 @@ return new class extends Migration
      */
     public function down(): void
     {
-        // Supprimer les contraintes
+        // Check if we're using SQLite
+        if (DB::getDriverName() === 'sqlite') {
+            // SQLite doesn't support DROP CONSTRAINT, so we'll skip this migration
+            return;
+        }
+        
+        // Supprimer les contraintes (MySQL only)
         DB::statement('ALTER TABLE stocks DROP CONSTRAINT IF EXISTS check_quantite_positive');
         DB::statement('ALTER TABLE stocks DROP CONSTRAINT IF EXISTS check_seuil_positive');
     }

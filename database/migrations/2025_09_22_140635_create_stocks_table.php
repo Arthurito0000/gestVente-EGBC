@@ -14,8 +14,8 @@ return new class extends Migration
         Schema::create('stocks', function (Blueprint $table) {
             $table->id();
             $table->foreignId('product_id')->constrained()->onDelete('cascade');
-            $table->integer('quantite')->default(0);
-            $table->integer('seuil')->default(10);
+            $table->decimal('quantite', 10, 3)->default(0);  // ← Au lieu de integer
+            $table->decimal('seuil', 10, 3)->default(10);
             $table->timestamps();
             
             // Un seul stock par produit

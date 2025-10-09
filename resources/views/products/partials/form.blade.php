@@ -8,7 +8,7 @@
                 <span class="block text-xs text-gray-400 italic">Ex: CJB pour COUVRE JOINT BLANC</span>
             </label>
             <input type="text" name="sku" value="{{ old('sku', $product->sku ?? '') }}" 
-                   class="w-full rounded-lg border border-gray-300 bg-gray-50 hover:bg-white focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors px-3 py-3" 
+                   class="w-full rounded-lg border border-gray-300 bg-gray-50 hover:bg-white focus:bg-white focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-200 transition-colors px-3 py-3" 
                    placeholder="Code unique du produit" required />
             @error('sku')
                 <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
@@ -19,7 +19,7 @@
         <div>
             <label class="block text-sm font-medium text-gray-700 mb-2">🏷️ Nom du produit *</label>
             <input type="text" name="nom" value="{{ old('nom', $product->nom ?? '') }}" 
-                   class="w-full rounded-lg border border-gray-300 bg-gray-50 hover:bg-white focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors px-3 py-3" 
+                   class="w-full rounded-lg border border-gray-300 bg-gray-50 hover:bg-white focus:bg-white focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-200 transition-colors px-3 py-3" 
                    placeholder="Nom du produit" required />
             @error('nom')
                 <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
@@ -32,7 +32,7 @@
             <div class="relative">
                 <input type="number" name="prix_achat" value="{{ old('prix_achat', $product->prix_achat ?? '') }}" 
                        step="0.01" min="0"
-                       class="w-full rounded-lg border border-gray-300 bg-gray-50 hover:bg-white focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors pl-3 pr-16 py-3" 
+                       class="w-full rounded-lg border border-gray-300 bg-gray-50 hover:bg-white focus:bg-white focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-200 transition-colors pl-3 pr-16 py-3" 
                        placeholder="0.00" required />
                 <span class="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 text-sm">Fcfa</span>
             </div>
@@ -47,7 +47,7 @@
             <div class="relative">
                 <input type="number" name="prix_vente" value="{{ old('prix_vente', $product->prix_vente ?? '') }}" 
                        step="0.01" min="0"
-                       class="w-full rounded-lg border border-gray-300 bg-gray-50 hover:bg-white focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors pl-3 pr-16 py-3" 
+                       class="w-full rounded-lg border border-gray-300 bg-gray-50 hover:bg-white focus:bg-white focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-200 transition-colors pl-3 pr-16 py-3" 
                        placeholder="0.00" required />
                 <span class="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 text-sm">Fcfa</span>
             </div>
@@ -63,7 +63,7 @@
             </label>
             <div class="relative">
                 <select name="categorie" 
-                        class="w-full rounded-lg border border-gray-300 bg-gray-50 hover:bg-white focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors pl-3 pr-10 py-3 appearance-none">
+                        class="w-full rounded-lg border border-gray-300 bg-gray-50 hover:bg-white focus:bg-white focus:ring-1 focus:ring-blue-500 focus:border-blue-200 focus:border-transparent focus:outline-none transition-colors pl-3 pr-10 py-3 appearance-none">
                     <option value="">Sélectionner une catégorie...</option>
                     @if(isset($categories))
                         @foreach($categories as $category)
@@ -95,7 +95,7 @@
             <div class="relative">
                 <input type="number" name="quantite" value="{{ old('quantite', isset($product) && $product->stock ? $product->stock->quantite : '') }}" 
                        min="0"
-                       class="w-full rounded-lg border border-gray-300 bg-gray-50 hover:bg-white focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors pl-3 pr-16 py-3" 
+                       class="w-full rounded-lg border border-gray-300 bg-gray-50 hover:bg-white focus:bg-white focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-200 transition-colors pl-3 pr-16 py-3" 
                        placeholder="0" required />
                 <span class="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 text-sm">unités</span>
             </div>
@@ -110,7 +110,7 @@
             <div class="relative">
                 <input type="number" name="seuil_stock" value="{{ old('seuil_stock', isset($product) && $product->stock ? $product->stock->seuil : '10') }}" 
                        min="0"
-                       class="w-full rounded-lg border border-gray-300 bg-gray-50 hover:bg-white focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors pl-3 pr-16 py-3" 
+                       class="w-full rounded-lg border border-gray-300 bg-gray-50 hover:bg-white focus:bg-white focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-200 transition-colors pl-3 pr-16 py-3" 
                        placeholder="10" required />
                 <span class="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 text-sm">unités</span>
             </div>

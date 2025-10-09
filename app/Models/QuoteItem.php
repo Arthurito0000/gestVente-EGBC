@@ -19,7 +19,7 @@ class QuoteItem extends Model
     ];
 
     protected $casts = [
-        'quantite' => 'integer',
+        'quantite' => 'decimal:2',
         'prix_unitaire' => 'decimal:2',
         'prix_total' => 'decimal:2',
     ];
@@ -35,10 +35,25 @@ class QuoteItem extends Model
         return $this->belongsTo(Product::class);
     }
 
+
     // Helpers
     public function getPrixUnitaireFormatte()
     {
         return number_format($this->prix_unitaire, 0, ',', ' ') . ' Fcfa';
+    }
+
+
+    public function getQuantiteFormatted()
+    {
+        $quantite = floatval($this->quantite);
+        
+        // Si c'est un nombre entier
+        if ($quantite == intval($quantite)) {
+            return intval($quantite);
+        }
+        
+        // Sinon afficher avec décimales (max 3)
+        return rtrim(rtrim(number_format($quantite, 3, ',', ''), '0'), ',');
     }
 
     public function getPrixTotalFormatte()

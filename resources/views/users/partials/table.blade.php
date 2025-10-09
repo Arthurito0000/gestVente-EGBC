@@ -170,8 +170,8 @@
 @endif
 
 <!-- Modal de confirmation de suppression -->
-<div id="deleteModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full hidden z-50">
-    <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+<div id="deleteModal" class="fixed inset-0 bg-white/80 backdrop-blur supports-[backdrop-filter]:bg-white/60  overflow-y-auto h-full w-full hidden z-50">
+    <div class="relative top-20 mx-auto p-5 border-none w-96 shadow-lg rounded-md bg-white">
         <div class="mt-3 text-center">
             <div class="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-red-100 mb-4">
                 <svg class="h-6 w-6 text-red-600 animate-pulse" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -204,8 +204,8 @@
 </div>
 
 <!-- Modal de confirmation de changement de statut -->
-<div id="statusModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full hidden z-50">
-    <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+<div id="statusModal" class="fixed shadow-lg inset-0 bg-white/80 backdrop-blur supports-[backdrop-filter]:bg-white/60  overflow-y-auto h-full w-full hidden z-50">
+    <div class="relative top-20 mx-auto p-5 border-none w-96 shadow-lg rounded-md bg-white">
         <div class="mt-3 text-center">
             <div id="statusIconContainer" class="mx-auto flex items-center justify-center h-12 w-12 rounded-full mb-4">
                 <svg id="statusIcon" class="h-6 w-6 animate-pulse" fill="none" stroke="currentColor" viewBox="0 0 24 24">

@@ -214,8 +214,15 @@ class DashboardController extends Controller
 
         $benefice = 0;
         foreach ($ventes as $vente) {
-            $coutAchat = $vente->product->prix_achat * $vente->quantite;
-            $benefice += $vente->total - $coutAchat;
+            // Check if product and prix_achat exist
+            if ($vente->product && $vente->product->prix_achat !== null) {
+                $coutAchat = $vente->product->prix_achat * $vente->quantite;
+                $benefice += $vente->total - $coutAchat;
+            } else {
+                // If purchase price is missing, use a default calculation
+                // This is a fallback - ideally should be fixed at data entry
+                $benefice += $vente->total * 0.3; // Assume 30% margin
+            }
         }
 
         return $benefice;

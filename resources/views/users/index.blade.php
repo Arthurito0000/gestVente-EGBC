@@ -39,7 +39,7 @@
         </div>
 
     <div class="bg-white rounded-2xl shadow-md overflow-hidden">
-        <div class="p-4 border-b flex items-center justify-between">
+        <div class="p-4 border-b border-gray-100 flex items-center justify-between">
             <div class="text-sm text-gray-600">
                 Liste des utilisateurs ({{ $users->total() }} au total)
             @can('manage-roles')

@@ -18,9 +18,9 @@ class UserSeeder extends Seeder
 
         // Utilisateur 1 : Admin principal
         $admin = User::updateOrCreate(
-            ['email' => 'admin@gesteventes.com'],
+            ['email' => 'lontchijoel12@gmail.com'],
             [
-                'name' => 'Administrateur Principal',
+                'name' => 'lontchi joel',
                 'password' => Hash::make('password123'),
                 'statut' => 'actif',
                 'email_verified_at' => now(),
@@ -68,7 +68,7 @@ class UserSeeder extends Seeder
         $this->command->info('');
         $this->command->info('🔐 COMPTES DE TEST :');
         $this->command->info('══════════════════════════════════════════════════════════');
-        $this->command->info('👑 Administrateur         : admin@gesteventes.com   / password123');
+        $this->command->info('👑 Administrateur         : lontchijoel12@gmail.com   / password123');
         $this->command->info('📦 Gérant Stock           : stock@gesteventes.com   / stock123');
         $this->command->info('💰 Vendeur                : vendeur@gesteventes.com / vendeur123');
         $this->command->info('🏪 Gestionnaire de ventes : ventes@gesteventes.com  / ventes123');

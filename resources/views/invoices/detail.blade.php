@@ -12,16 +12,16 @@
     @endphp
 
 
-    <div class="space-y-6">
+    <div class="space-y-6 px-4 py-6">
         <!-- Header & Actions -->
-        <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div>
                 <h1 class="font-heading text-2xl text-gray-900">Facture {{ $invoice->invoice_number }}</h1>
                 <p class="text-gray-500">Détails de la facture — {{ $date }}</p>
             </div>
-            <div class="flex items-center gap-2">
+            <div class="flex flex-col sm:flex-row items-center gap-2">
                 <a href="{{ route('invoices.print', $invoice) }}" target="_blank"
-                    class="inline-flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white rounded-lg px-4 py-2">
+                    class="inline-flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white rounded-lg px-4 py-2 w-full sm:w-auto justify-center">
                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
                         stroke="currentColor" class="w-5 h-5">
                         <path stroke-linecap="round" stroke-linejoin="round"
@@ -30,13 +30,13 @@
                     Imprimer
                 </a>
                 <a href="{{ route('invoices.index') }}"
-                    class="inline-flex items-center gap-2 border rounded-lg px-4 py-2 hover:bg-gray-50">Retour</a>
+                    class="inline-flex items-center gap-2 border rounded-lg px-4 py-2 hover:bg-gray-50 w-full sm:w-auto justify-center">Retour</a>
             </div>
         </div>
 
         <!-- Info cards -->
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            <div class="bg-white rounded-2xl shadow-md border border-gray-200 p-6">
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div class="bg-white rounded-2xl shadow-md border border-gray-200 p-4">
                 <div class="text-sm text-gray-500 mb-2">Informations facture</div>
                 <dl class="space-y-2 text-sm">
                     <div class="flex justify-between gap-4">
@@ -58,7 +58,7 @@
                 </dl>
             </div>
 
-            <div class="bg-white rounded-2xl shadow-md border border-gray-200 p-6">
+            <div class="bg-white rounded-2xl shadow-md border border-gray-200 p-4">
                 <div class="text-sm text-gray-500 mb-2">Client</div>
                 <dl class="space-y-2 text-sm">
                     <div class="flex justify-between gap-4">
@@ -72,7 +72,7 @@
                 </dl>
             </div>
 
-            <div class="bg-white rounded-2xl shadow-md border border-gray-200 p-6">
+            <div class="bg-white rounded-2xl shadow-md border border-gray-200 p-4">
                 <div class="text-sm text-gray-500 mb-2">Vendeur</div>
                 <dl class="space-y-2 text-sm">
                     <div class="flex justify-between gap-4">
@@ -90,7 +90,7 @@
 
         <!-- Lines table -->
         <div class="bg-white rounded-2xl shadow-md border mb-20 border-gray-200 overflow-hidden">
-            <div class="p-4 border-b flex items-center justify-between">
+            <div class="p-4 border-b flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                 <div class="text-sm text-gray-600">Lignes de facture</div>
                 <div class="text-sm text-gray-500">{{ $invoice->products->count() }} articles</div>
             </div>
@@ -109,11 +109,13 @@
                         @php $sum = 0; @endphp
                         @foreach ($invoice->products as $p)
                             @php
-                                $qty = (int) ($p->pivot->quantity ?? 0);
+                                $qty = $p->pivot->quantity ?? 0;
+                                $qty = rtrim(rtrim(number_format($qty, 3, ',', ''), '0'), ',');
                                 $unit = (float) ($p->pivot->unit_price ?? 0);
                                 $line = (float) ($p->pivot->total_price ?? $qty * $unit);
                                 $sum += $line;
                             @endphp
+                            
                             <tr class="hover:bg-gray-50">
                                 <td class="px-4 py-2 text-sm font-mono text-gray-700">{{ $p->sku }}</td>
                                 <td class="px-4 py-2 text-sm text-gray-900">{{ $p->nom }}</td>
@@ -130,7 +132,7 @@
 
             <!-- Totals summary -->
             <div class="p-4 border-t">
-                <div class="w-full md:w-auto md:min-w-[320px] ml-auto">
+                <div class="w-full sm:w-auto sm:min-w-[320px] ml-auto">
                     <div class="bg-gray-50 border border-gray-200 rounded-xl p-4">
                         <div class="flex items-center justify-between mb-2">
                             <div class="text-sm text-gray-600">Sous-total</div>
@@ -173,7 +175,7 @@
                                 d="M6 18L18 6M6 6l12 12"></path>
                         </svg>
                     </button>
-                    <div class="p-8 text-center">
+                    <div class="p-6 sm:p-8 text-center">
                         <!-- Icône d'alerte -->
                         <div
                             class="mx-auto flex items-center justify-center h-16 w-16 rounded-full bg-red-100 mb-6 animate-pulse">
@@ -190,7 +192,7 @@
                             <p class="text-sm text-red-600 mt-3 bg-red-50 px-4 py-2 rounded-lg">⚠️ Cette action est
                                 irréversible</p>
                         </div>
-                        <div class="flex gap-3">
+                        <div class="flex flex-col sm:flex-row gap-3">
                             <button id="cancelDelete"
                                 class="flex-1 px-6 py-3 bg-gray-100 text-gray-700 font-medium rounded-xl hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-gray-300 transition-all duration-200 hover:scale-105">Annuler</button>
                             <button id="confirmDelete"

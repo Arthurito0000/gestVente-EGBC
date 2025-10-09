@@ -50,6 +50,25 @@ class QuoteController extends Controller
 
     public function store(Request $request)
     {
+        // Convertir les fractions en décimales avant validation
+        if ($request->has('items')) {
+            foreach ($request->items as $key => $item) {
+                if (isset($item['quantite_decimal']) && $item['quantite_decimal']) {
+                    // Utiliser la valeur décimale déjà calculée par JavaScript
+                    $request->merge([
+                        "items.{$key}.quantite" => $item['quantite_decimal']
+                    ]);
+                } elseif (isset($item['quantite']) && strpos($item['quantite'], '/') !== false) {
+                    // Fallback : convertir côté serveur si JavaScript a échoué
+                    [$numerator, $denominator] = explode('/', $item['quantite']);
+                    $decimal = floatval($numerator) / floatval($denominator);
+                    $request->merge([
+                        "items.{$key}.quantite" => $decimal
+                    ]);
+                }
+            }
+        }
+    
         $validated = $request->validate([
             'client_nom' => 'required|string|max:255',
             'objet' => 'nullable|string',
@@ -58,10 +77,11 @@ class QuoteController extends Controller
             'items' => 'required|array|min:1',
             'items.*.product_id' => 'required|exists:products,id',
             'items.*.designation' => 'required|string',
-            'items.*.quantite' => 'required|integer|min:1',
+            'items.*.quantite' => 'required|numeric|min:0.001', // Changé de integer à numeric
+            'items.*.quantite_decimal' => 'nullable|numeric',
             'items.*.prix_unitaire' => 'required|numeric|min:0',
         ]);
-
+    
         DB::beginTransaction();
         try {
             // Créer le devis
@@ -72,36 +92,38 @@ class QuoteController extends Controller
                 'objet' => $validated['objet'],
                 'date_devis' => $validated['date_devis'],
             ]);
-
+    
             // Ajouter les items
             $totalMateriel = 0;
-
+    
             foreach ($validated['items'] as $item) {
-                $prixTotal = $item['quantite'] * $item['prix_unitaire'];
-
+                // Utiliser quantite_decimal si disponible, sinon quantite
+                $quantite = $item['quantite_decimal'] ?? $item['quantite'];
+                $prixTotal = $quantite * $item['prix_unitaire'];
+    
                 QuoteItem::create([
                     'quote_id' => $quote->id,
                     'product_id' => $item['product_id'],
                     'designation' => $item['designation'],
-                    'quantite' => $item['quantite'],
+                    'quantite' => $quantite, // Stocker la valeur décimale
                     'prix_unitaire' => $item['prix_unitaire'],
                     'prix_total' => $prixTotal,
                 ]);
-
+    
                 $totalMateriel += $prixTotal;
             }
-
+    
             $mainOeuvre = $validated['main_oeuvre'] ?? 0;
-
+    
             // Mettre à jour les totaux
             $quote->update([
                 'total_materiel' => $totalMateriel,
                 'main_oeuvre' => $mainOeuvre,
                 'total_general' => $totalMateriel + $mainOeuvre,
             ]);
-
+    
             DB::commit();
-
+    
             return redirect()->route('quotes.show', $quote)
                 ->with('success', 'Devis créé avec succès !');
         } catch (\Exception $e) {
@@ -110,6 +132,7 @@ class QuoteController extends Controller
                 ->with('error', 'Erreur lors de la création du devis : ' . $e->getMessage());
         }
     }
+    
 
     public function show(Quote $quote)
     {
@@ -127,6 +150,23 @@ class QuoteController extends Controller
 
     public function update(Request $request, Quote $quote)
     {
+        // Même logique de conversion pour update
+        if ($request->has('items')) {
+            foreach ($request->items as $key => $item) {
+                if (isset($item['quantite_decimal']) && $item['quantite_decimal']) {
+                    $request->merge([
+                        "items.{$key}.quantite" => $item['quantite_decimal']
+                    ]);
+                } elseif (isset($item['quantite']) && strpos($item['quantite'], '/') !== false) {
+                    [$numerator, $denominator] = explode('/', $item['quantite']);
+                    $decimal = floatval($numerator) / floatval($denominator);
+                    $request->merge([
+                        "items.{$key}.quantite" => $decimal
+                    ]);
+                }
+            }
+        }
+    
         $validated = $request->validate([
             'client_nom' => 'required|string|max:255',
             'objet' => 'nullable|string',
@@ -135,36 +175,35 @@ class QuoteController extends Controller
             'items' => 'required|array|min:1',
             'items.*.product_id' => 'required|exists:products,id',
             'items.*.designation' => 'required|string',
-            'items.*.quantite' => 'required|integer|min:1',
+            'items.*.quantite' => 'required|numeric|min:0.001',
+            'items.*.quantite_decimal' => 'nullable|numeric',
             'items.*.prix_unitaire' => 'required|numeric|min:0',
         ]);
-
+    
         DB::beginTransaction();
         try {
-            // Supprimer les anciens items
             $quote->items()->delete();
-
-            // Ajouter les nouveaux items
+    
             $totalMateriel = 0;
-
+    
             foreach ($validated['items'] as $item) {
-                $prixTotal = $item['quantite'] * $item['prix_unitaire'];
-
+                $quantite = $item['quantite_decimal'] ?? $item['quantite'];
+                $prixTotal = $quantite * $item['prix_unitaire'];
+    
                 QuoteItem::create([
                     'quote_id' => $quote->id,
                     'product_id' => $item['product_id'],
                     'designation' => $item['designation'],
-                    'quantite' => $item['quantite'],
+                    'quantite' => $quantite,
                     'prix_unitaire' => $item['prix_unitaire'],
                     'prix_total' => $prixTotal,
                 ]);
-
+    
                 $totalMateriel += $prixTotal;
             }
-
+    
             $mainOeuvre = $validated['main_oeuvre'] ?? 0;
-
-            // Mettre à jour le devis et les totaux
+    
             $quote->update([
                 'client_nom' => $validated['client_nom'],
                 'objet' => $validated['objet'],
@@ -173,9 +212,9 @@ class QuoteController extends Controller
                 'main_oeuvre' => $mainOeuvre,
                 'total_general' => $totalMateriel + $mainOeuvre,
             ]);
-
+    
             DB::commit();
-
+    
             return redirect()->route('quotes.show', $quote)
                 ->with('success', 'Devis modifié avec succès !');
         } catch (\Exception $e) {
@@ -203,14 +242,20 @@ class QuoteController extends Controller
     }
 
     public function downloadPdf(Quote $quote)
-    {
-        $quote->load(['user', 'items.product']);
-        
-        $pdf = Pdf::loadView('quotes.pdf', compact('quote'))
-            ->setPaper('a4', 'portrait');
+{
+    $quote->load(['user', 'items.product']);
+    
+    // Ajouter un timestamp pour éviter les conflits de noms
+    $timestamp = now()->format('YmdHis');
+    $filename = "devis-{$quote->numero_devis}-{$timestamp}.pdf";
+    
+    $pdf = Pdf::loadView('quotes.pdf', compact('quote'))
+        ->setPaper('a4', 'portrait')
+        ->setOption('enable_php', true)
+        ->setOption('enable_remote', false);
 
-        return $pdf->download("devis-{$quote->numero_devis}.pdf");
-    }
+    return $pdf->download($filename);
+}
 
     public function convertToSale(Quote $quote)
     {

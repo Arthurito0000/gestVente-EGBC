@@ -27,7 +27,7 @@
   </div>
 
   <div class="bg-white rounded-2xl shadow-md overflow-hidden">
-    <div class="p-4 border-b flex items-center justify-between">
+    <div class="p-4 border-b border-gray-100 flex items-center justify-between">
       <div class="text-sm text-gray-600">Niveaux actuels</div>
       <div class="flex items-center gap-2 text-sm">
         @can('export-stock')

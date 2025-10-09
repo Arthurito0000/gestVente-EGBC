@@ -17,7 +17,7 @@
             font-size: 12px;
             max-width: var(--paper-width);
             margin: 0 auto;
-            padding: 20mm;
+            padding: 10mm;
             color: #000;
             background: white;
         }
@@ -25,12 +25,12 @@
         @media screen {
             body {
                 background: #f5f5f5;
-                padding: 40px;
+                padding: 20px;
             }
 
             .invoice-container {
                 background: white;
-                padding: 40px;
+                padding: 20px;
                 border-radius: 8px;
                 box-shadow: 0 4px 6px rgba(0, 0, 0, 0.08);
                 max-width: var(--paper-width);
@@ -41,7 +41,7 @@
         @media print {
             body {
                 background: white;
-                padding: 20mm;
+                padding: 10mm;
             }
 
             .invoice-container {
@@ -59,10 +59,12 @@
         /* -------- HEADER -------- */
         .invoice-header {
             display: flex;
+            flex-wrap: wrap;
             justify-content: space-between;
             align-items: flex-start;
             margin-bottom: 8px;
             width: 100%;
+            gap: 10px;
         }
 
         .header-left {
@@ -76,8 +78,8 @@
 
         .header-logo img {
             display: block;
-            max-height: 50px;
-            max-width: 120px;
+            max-height: 40px;
+            max-width: 100px;
             flex-shrink: 0;
         }
 
@@ -91,19 +93,19 @@
 
         .company-name {
             font-weight: bold;
-            font-size: 14px;
+            font-size: 12px;
             margin: 0;
         }
 
         .subtitle {
-            font-size: 10px;
+            font-size: 9px;
             margin-top: 2px;
         }
 
         .description {
-            font-size: 8px;
+            font-size: 7px;
             margin-top: 4px;
-            line-height: 1.3;
+            line-height: 1.2;
         }
 
         .header-center {
@@ -112,11 +114,12 @@
             font-size: 12px;
             flex: 0 0 auto;
             padding: 0 10px;
+            min-width: 120px;
         }
 
         .header-right {
             text-align: right;
-            font-size: 12px;
+            font-size: 11px;
             flex: 0 0 auto;
             white-space: nowrap;
         }
@@ -143,24 +146,26 @@
         .line {
             display: flex;
             justify-content: space-between;
+            flex-wrap: wrap;
         }
 
         table {
             width: 100%;
             border-collapse: collapse;
             margin-top: 6px;
+            font-size: 11px;
         }
 
         th,
         td {
             text-align: left;
-            padding: 4px 0;
+            padding: 3px 2px;
             vertical-align: top;
         }
 
         th {
             font-weight: bold;
-            font-size: 12px;
+            font-size: 11px;
         }
 
         td.text-right,
@@ -172,11 +177,12 @@
         .total {
             font-weight: bold;
             margin-top: 8px;
+            font-size: 13px;
         }
 
         .footer {
             text-align: center;
-            font-size: 9px;
+            font-size: 8px;
             margin-top: 10px;
             border-top: 1px dashed #000;
             padding-top: 6px;
@@ -185,6 +191,7 @@
         .visa {
             margin-top: 10px;
             padding-top: 6px;
+            font-size: 10px;
         }
 
         .visa-table {
@@ -198,18 +205,18 @@
 
         .button-container {
             text-align: center;
-            margin: 20px 0;
+            margin: 15px 0;
         }
 
         .print-button {
             background: var(--accent);
             color: white;
             border: none;
-            padding: 10px 20px;
+            padding: 8px 16px;
             border-radius: 5px;
             cursor: pointer;
-            font-size: 12px;
-            margin: 10px 5px;
+            font-size: 11px;
+            margin: 5px;
         }
 
         .print-button:hover {
@@ -220,11 +227,11 @@
             background: var(--muted);
             color: white;
             border: none;
-            padding: 10px 20px;
+            padding: 8px 16px;
             border-radius: 5px;
             cursor: pointer;
-            font-size: 12px;
-            margin: 10px 5px;
+            font-size: 11px;
+            margin: 5px;
             text-decoration: none;
             display: inline-block;
         }
@@ -235,12 +242,95 @@
 
         @media print {
             .description {
-                font-size: 9.5px;
+                font-size: 8px;
             }
 
             th,
             td {
-                padding: 3px 0;
+                padding: 2px 1px;
+                font-size: 10px;
+            }
+            
+            .header-center {
+                font-size: 11px;
+            }
+            
+            .header-right {
+                font-size: 10px;
+            }
+        }
+        
+        @media (max-width: 768px) {
+            body {
+                padding: 5mm;
+            }
+            
+            .invoice-header {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            
+            .header-left {
+                max-width: 100%;
+            }
+            
+            .header-center,
+            .header-right {
+                text-align: left;
+            }
+            
+            table {
+                font-size: 10px;
+            }
+            
+            th,
+            td {
+                padding: 2px 1px;
+            }
+            
+            .button-container {
+                display: flex;
+                flex-direction: column;
+                gap: 10px;
+            }
+            
+            .print-button,
+            .back-button {
+                width: 100%;
+                margin: 0;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            body {
+                padding: 3mm;
+                font-size: 10px;
+            }
+            
+            .company-name {
+                font-size: 11px;
+            }
+            
+            .subtitle {
+                font-size: 8px;
+            }
+            
+            .description {
+                font-size: 6px;
+            }
+            
+            table {
+                font-size: 9px;
+            }
+            
+            th,
+            td {
+                padding: 1px;
+            }
+            
+            .header-center {
+                font-size: 10px;
+                min-width: auto;
             }
         }
     </style>
@@ -280,11 +370,11 @@
         </div>
 
         <!-- CLIENT / VENDEUR -->
-        <div style="margin-top:8px; display: flex; justify-content: space-between;">
+        <div style="margin-top:8px; display: flex; flex-wrap: wrap; justify-content: space-between; gap: 5px;">
             <div class="bold">
                 Client: {{ $invoice->client_name ?? 'N/A' }}
                 @if (!empty($invoice->client_phone))
-                    <span style="margin-left: 15px;">Tél: {{ $invoice->client_phone }}</span>
+                    <span style="margin-left: 10px;">Tél: {{ $invoice->client_phone }}</span>
                 @endif
             </div>
             @if (!empty($invoice->vendor_name))
@@ -302,7 +392,7 @@
                     <th style="width:54%;">Désignation</th>
                     <th style="width:12%;">Prix unitaire</th>
                     <th style="width:8%;">Qté</th>
-                    <th style="width:16%;" class="text-right">Total</th>
+                    <th style="width:16%;">Total</th>
                 </tr>
             </thead>
             <tbody>
@@ -316,8 +406,8 @@
                         <td>{{ $product->sku }}</td>
                         <td>{{ $product->nom }}</td>
                         <td>{{ $product->prix_vente }}</td>
-                        <td>{{ $product->pivot->quantity }}</td>
-                        <td class="text-right">{{ number_format($lineTotal, 0, ',', ' ') }}</td>
+                        <td>{{ rtrim(rtrim(number_format($product->pivot->quantity, 3, ',', ''), '0'), ',') }}</td>
+                        <td>{{ number_format($lineTotal, 0, ',', ' ') }} FCFA</td>
                     </tr>
                 @endforeach
             </tbody>
